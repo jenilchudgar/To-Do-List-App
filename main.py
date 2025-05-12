@@ -40,8 +40,8 @@ class User(UserMixin):
 @app.route('/logout')
 @login_required
 def logout():
-    logout_user()
-    return render_template("result.html",msg="Logout Successful!")
+    logout_user() 
+    return render_template("result.html",title="Logout Successful!",msg="We're sorry to see you go, do return later to complete your tasks!",color="#67ffa1",image="tick.png",rd="home")
 
 @app.route('/tasks',methods=['GET'])
 @login_required
@@ -151,13 +151,21 @@ def login():
         if acc:
             is_valid = bcrypt.check_password_hash(acc['password'], password)
             if is_valid:
-                msg = "Login Successful!"
+                title = "Login Successful!"
+                msg = "You have successfully logged into your website. Enjoy the experience and do your tasks deligently."
+                rd = "home"
+                img = "tick.png"
+                color = "#67ffa1"
                 user = User(id=acc['id'],username=acc['username'],role=acc['role'])
 
                 login_user(user,remember=('check' in request.form))
             else:
-                msg = "Login Failed! (Pehle password yaad kar ke aa!)"
-            return render_template("result.html",msg=msg)
+                title = "Login Failed!"
+                msg = "The Login Failed as you entered the incorrect password. Kindly retry."
+                rd = "login"
+                img = "error.png"
+                color = "#fc4747"
+            return render_template("result.html",title=title,msg=msg,rd=rd,image=img,color=color)
         else:
             msg = "Your Account doesnt exist! Kindly register first!"
         mysql.connection.commit()
@@ -177,27 +185,30 @@ def register():
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
         if acc:
-            msg = "Account already Exists!" 
+            title = "Account already Exists!" 
         else:
             cursor.execute("INSERT INTO Persons (username, password, city,role) VALUES (%s, %s, %s,%s)",(username,hashed_password,city,role))
-            msg = "You have successfully registered!"
+            title = "You have successfully registered!"
         mysql.connection.commit()
         
-        return render_template("result.html",msg=msg)
+        return render_template("result.html",title=title,msg="Thank you for registering on our websites. Enjoy the website experience!",color="#fccc47",image="tick.png",rd="login")
     
     return render_template("register.html")
 
 @login_required
 @app.route('/users',methods=['GET'])
 def view_users():
-    admin = current_user.role == "admin"
+    try:
+        admin = current_user.role == "admin"
+    except:
+        admin = False
     if admin:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("SELECT * FROM Persons")
         users = cursor.fetchall()
         return render_template("users.html",admin=admin,users=users)
     else:
-        return abort(401)
+        return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color="#fc4747",image="error.png",rd="home")
 
 @login_required
 @app.route('/change_role/<int:user_id>',methods=['GET','POST'])
@@ -217,7 +228,7 @@ def change_role(user_id):
         cursor.execute("UPDATE persons SET role = %s WHERE id = %s",(role,user_id,))
         mysql.connection.commit()
         return redirect(url_for('view_users'))
-    return abort(401)
+    return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color="#fc4747",image="error.png",rd="home")
 
 @login_required
 @app.route('/delete_user/<int:user_id>',methods=['GET','POST'])
@@ -231,7 +242,8 @@ def delete_user(user_id):
         mysql.connection.commit()
         return redirect(url_for('view_users'))
 
-    return abort(401)
+    return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color="#fc4747",image="error.png",rd="home")
 
 if __name__ == '__main__':
     app.run(debug=True)
+

@@ -1,38 +1,45 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <a class="navbar-brand" href="/" style="margin-left: 10px;">Home</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    
+    <img src="/static/images/image1.jpg" class="w-100" style="opacity: 0.7; height: 100vh; width: 100%; object-fit: cover; user-select: none; pointer-events: none; position: absolute; top: 0; left: 0; z-index: -1;" alt="">
+    
+    <div tyle="position: relative; z-index: 1;">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="/" style="margin-left: 10px;">Home</a>
 
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
-            <a class="nav-link" href="/login">Login</a>
-        </li>
-        <li class="nav-item active">
-            <a class="nav-link" href="/register">Register</a>
-        </li>
-        {% if user %}
-            <li class="nav-item active">
-                <a class="nav-link" href="/logout">Logout</a>
-            </li>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        </button>
 
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-                <a class="nav-link" href="/tasks">View Tasks</a>
+                <a class="nav-link" href="/login">Login</a>
             </li>
-        {% endif %}
+            <li class="nav-item active">
+                <a class="nav-link" href="/register">Register</a>
+            </li>
+            {% if is_user %}
+                <li class="nav-item active">
+                    <a class="nav-link" href="/logout">Logout</a>
+                </li>
 
-        {% if admin %}
-            <li class="nav-item active">
-                <a class="nav-link" href="/users">View Users</a>
-            </li>
-        {% endif %}
+                <li class="nav-item active">
+                    <a class="nav-link" href="/tasks">View Tasks</a>
+                </li>
+            {% endif %}
+
+            {% if admin %}
+                <li class="nav-item active">
+                    <a class="nav-link" href="/users">View Users</a>
+                </li>
+            {% endif %}
+        </div>
+        </nav>
+
+        <h2 style="margin: 10px; color: black;">Welcome! {{user.username}}</h2>
     </div>
-    </nav>
 
-    <h2 style="margin: 10px;">Welcome! {{user.username}}</h2>
-    <img src="/static/images/image1.jpg" class="w-100" style="opacity: 0.8;" alt="">
+    
+    
 {% endblock %}
