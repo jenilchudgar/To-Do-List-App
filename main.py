@@ -59,10 +59,14 @@ def view_task():
     if admin:
         for task in tasks:
             cursor.execute("SELECT * FROM persons WHERE id = %s",(task['user_id'],))
-            users.append(cursor.fetchone())
-
+            user = cursor.fetchone()
+            users.append(user)
+        print(users)
         for user,task in zip(users,tasks):
-            l.append((user['username'],task,))
+            if user['username'] is not None:
+                l.append((user['username'],task,))
+            else:
+                l.append(("Deleted User",task,))
     else:
         for task in tasks:
             l.append((user,task,))
@@ -123,11 +127,12 @@ def update_task(task_id):
 
 @app.route('/',methods=['GET'])
 def home():
+    is_user = current_user.is_authenticated
     try:
         admin = current_user.role == "admin"
     except:
         admin = False
-    return render_template("index.html",user=current_user.is_authenticated,admin=admin)
+    return render_template("index.html",is_user=is_user,admin=admin,user=current_user)
 
 @login_manager.user_loader
 def load_user(user_id):
