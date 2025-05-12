@@ -221,6 +221,8 @@ def delete_user(user_id):
     if admin:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("DELETE FROM Persons WHERE id =  %s",(user_id,))
+        cursor.execute("DELETE FROM Tasks WHERE user_id = %s",(user_id,))
+
         mysql.connection.commit()
         return redirect(url_for('view_users'))
 
