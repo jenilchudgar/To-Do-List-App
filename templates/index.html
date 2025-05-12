@@ -1,46 +1,35 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <style>
-        .mar{
-            margin-left: 20px;
-        }
-        .center{
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-    </style>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="/" style="margin-left: 10px;">Home</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
 
-    <div style="width: 100px; height: 100px; background-color:gold;" class="mar center">
-        <a href="/login">Login</a>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+            <a class="nav-link" href="/login">Login</a>
+        </li>
+        <li class="nav-item active">
+            <a class="nav-link" href="/register">Register</a>
+        </li>
+        {% if user %}
+            <li class="nav-item active">
+                <a class="nav-link" href="/logout">Logout</a>
+            </li>
+
+            <li class="nav-item active">
+                <a class="nav-link" href="/tasks">View Tasks</a>
+            </li>
+        {% endif %}
+
+        {% if admin %}
+            <li class="nav-item active">
+                <a class="nav-link" href="/users">View Users</a>
+            </li>
+        {% endif %}
     </div>
-
-    <br>
-
-    <div style="width: 100px; height: 100px; background-color:darkseagreen;" class="mar center">
-        <a href="/register">Register</a>
-    </div>
-
-    <br>
-
-    <div style="width: 100px; height: 100px; background-color:lightskyblue;" class="mar center">
-        <a href="/logout">Logout</a>
-    </div>
-
-    <br>
-
-    {% if user %}
-        <div style="width: 100px; height: 100px; background-color:darkkhaki;" class="mar center">
-            <a href="/tasks">View Tasks</a>
-        </div>
-    {% endif %}
-
-    <br>
-
-    {% if admin %}
-        <div style="width: 100px; height: 100px; background-color:salmon;" class="mar center">
-            <a href="/users">View Users</a>
-        </div>
-    {% endif %}
+    </nav>
 {% endblock %}
