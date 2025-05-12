@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">User</th>
+                    <th scope="col">Due Time</th>
+                    <th scope="col">Task</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="table-group-divider">
+                {% for l in full_list %}
+                    <tr>
+                        <td>{{ l[1].id }}</td>
+                        <td>{{ l[0] }}</td>
+                        <td>{{ l[1].time }}</td>
+                        <td>{{ l[1].task }}</td>  
+                        <td>
+                            <form method="post" action="{{ url_for('delete_task', task_id=l[1].id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this task?')">
+                                    Delete
+                                </button>
+                            </form>
+                            <a href="{{ url_for('update_task', task_id=l[1].id) }}" class="btn btn-warning btn-sm ms-2">
+                                Update
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-start mt-3">
+        <a href="{{ url_for('add_task') }}" class="btn btn-success">
+            Add Task
+        </a>
+    </div>
+</div>
+{% endblock %}

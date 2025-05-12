@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h3 style="text-align: center;">Update Task</h3>
+    <style>
+        .box{
+            margin-left: 25px;
+        }
+    </style>
+    <form method="post">
+        <div class="mb-3 box">
+            <label for="exampleFormControlInput1" class="form-label" >Time</label>
+            <input class="form-control" name="time" id="exampleFormControlInput1" value="{{task.time}}">
+        </div>
+        <div class="mb-3 box">
+            <label for="exampleFormControlTextarea1" class="form-label">Task</label>
+            <textarea class="form-control" name="task" id="exampleFormControlTextarea1" rows="3">{{task.task}}</textarea>
+        </div>
+  
+        <button type="submit" class="btn btn-success box">Submit</button>
+    </form>
+{% endblock %}

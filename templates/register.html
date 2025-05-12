@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<form method="POST">
+    {{ csrf_input }}
+    <style>
+        .box{
+            margin-left: 25px;
+            margin-right: 100px;
+        }
+    </style>
+    <div class="mb-3 box">
+        <label for="exampleInputUsername1" class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" id="exampleInputUsername1" aria-describedby="usernameHelp">
+    </div>
+    
+    <div class="mb-3 box">
+        <label for="exampleInputPassword1" class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" id="exampleInputPassword1">
+    </div>
+
+    <div class="mb-3 box">
+        <label for="exampleInputUsername1" class="form-label">City</label>
+        <input type="text" name="city" class="form-control" id="exampleInputUsername1" aria-describedby="usernameHelp">
+    </div>
+    <button type="submit" class="btn btn-primary box">Submit</button>
+</form>
+{% endblock %}

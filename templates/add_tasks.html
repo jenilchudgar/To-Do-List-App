@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h3 style="text-align: center;">Add Task</h3>
+    <style>
+        .box{
+            margin-left: 25px;
+        }
+    </style>
+    <form method="post">
+        <div class="mb-3 box">
+            <label for="exampleFormControlInput1" class="form-label" >Time</label>
+            <input class="form-control" name="time" id="exampleFormControlInput1" placeholder="12:00 PM">
+        </div>
+        <div class="mb-3 box">
+            <label for="exampleFormControlTextarea1" class="form-label">Task</label>
+            <textarea class="form-control" name="task" id="exampleFormControlTextarea1" rows="3"></textarea>
+        </div>
+        {% if admin %}
+            <select class="form-select box" aria-label="Default select example" style="display: block; width: 200px;" name="userid" >
+                <option selected>Users</option>
+                {% for user in users %}
+                    <option value="{{user.id}}">{{user.username}}</option>
+                {% endfor %}
+            </select>
+        {% endif %}
+        <br>
+        <button type="submit" class="btn btn-warning box">Submit</button>
+    </form>
+{% endblock %}

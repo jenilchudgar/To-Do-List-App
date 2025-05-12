@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <style>
+        .mar{
+            margin-left: 20px;
+        }
+        .center{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+
+    <div style="width: 100px; height: 100px; background-color:gold;" class="mar center">
+        <a href="/login">Login</a>
+    </div>
+
+    <br>
+
+    <div style="width: 100px; height: 100px; background-color:darkseagreen;" class="mar center">
+        <a href="/register">Register</a>
+    </div>
+
+    <br>
+
+    <div style="width: 100px; height: 100px; background-color:lightskyblue;" class="mar center">
+        <a href="/logout">Logout</a>
+    </div>
+
+    <br>
+
+    {% if user %}
+        <div style="width: 100px; height: 100px; background-color:darkkhaki;" class="mar center">
+            <a href="/tasks">View Tasks</a>
+        </div>
+    {% endif %}
+
+    <br>
+
+    {% if admin %}
+        <div style="width: 100px; height: 100px; background-color:salmon;" class="mar center">
+            <a href="/users">View Users</a>
+        </div>
+    {% endif %}
+{% endblock %}
