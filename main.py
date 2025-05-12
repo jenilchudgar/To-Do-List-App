@@ -209,10 +209,21 @@ def change_role(user_id):
         else:
             role = "admin"
 
-        print(role)
         cursor.execute("UPDATE persons SET role = %s WHERE id = %s",(role,user_id,))
         mysql.connection.commit()
         return redirect(url_for('view_users'))
+    return abort(401)
+
+@login_required
+@app.route('/delete_user/<int:user_id>',methods=['GET','POST'])
+def delete_user(user_id):
+    admin = current_user.role == "admin"
+    if admin:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute("DELETE FROM Persons WHERE id =  %s",(user_id,))
+        mysql.connection.commit()
+        return redirect(url_for('view_users'))
+
     return abort(401)
 
 if __name__ == '__main__':
