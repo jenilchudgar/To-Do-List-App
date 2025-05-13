@@ -1,4 +1,4 @@
-from flask import Flask,request,render_template,redirect,url_for,abort
+from flask import Flask,request,render_template,redirect,url_for
 from flask_mysqldb import MySQL
 from flask_login import LoginManager,UserMixin,login_user,login_required,logout_user,current_user
 from flask_bcrypt import Bcrypt
@@ -6,6 +6,7 @@ import MySQLdb.cursors
 
 app = Flask(__name__)
 app.secret_key = 'SECRET_KEY_2025'
+app.url_map.strict_slashes = False
 
 # Login Manager
 login_manager = LoginManager()
@@ -58,7 +59,7 @@ def logout():
     logout_user() 
     return render_template("result.html",title="Logout Successful!",msg="We're sorry to see you go, do return later to complete your tasks!",color="#67ffa1",image="tick.png",rd="home"),200
 
-@app.route('/tasks',methods=['GET'])
+@app.route('/tasks/',methods=['GET'])
 @login_required
 def view_task():
     user_id = current_user.id
@@ -110,7 +111,7 @@ def add_task():
         
         cursor.execute("INSERT INTO tasks (user_id, time, task) VALUES (%s, %s, %s)",(user_id,time,task))
         mysql.connection.commit()
-        return redirect(url_for('view_task')),20  
+        return redirect(url_for('view_task'))
     cursor.execute("SELECT * FROM persons")
     users = cursor.fetchall()
     return render_template("add_tasks.html",admin=is_admin(),users=users),200
@@ -126,7 +127,7 @@ def delete_task(task_id):
         cursor.execute("DELETE FROM TASKS WHERE id = %s and user_id = %s",(task_id,current_user.id))
 
     mysql.connection.commit()
-    return redirect(url_for('view_task')),200
+    return redirect(url_for('view_task'))
 
 @app.route('/update_task/<int:task_id>',methods=['GET','POST'])
 @login_required
@@ -138,7 +139,7 @@ def update_task(task_id):
         else:
             cursor.execute("UPDATE TASKS SET time = %s, task = %s WHERE id = %s AND user_id = %s",(request.form['time'], request.form['task'], task_id, current_user.id))
         mysql.connection.commit()
-        return redirect(url_for('view_task')),200
+        return redirect(url_for('view_task'))
     
     cursor.execute("SELECT * FROM TASKS WHERE user_id = %s and id = %s",(current_user.id,task_id))
     if is_admin():
@@ -248,7 +249,7 @@ def change_role(user_id):
 
         cursor.execute("UPDATE persons SET role = %s WHERE id = %s",(role,user_id,))
         mysql.connection.commit()
-        return redirect(url_for('view_users')),200
+        return redirect(url_for('view_users'))
     
     return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color="#fc4747",image="error.png",rd="home"),401
 
