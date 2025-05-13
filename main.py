@@ -3,6 +3,7 @@ from flask_mysqldb import MySQL
 from flask_login import LoginManager,UserMixin,login_user,login_required,logout_user,current_user
 from flask_bcrypt import Bcrypt
 import MySQLdb.cursors
+from base64 import *
 
 app = Flask(__name__)
 app.secret_key = 'SECRET_KEY_2025'
@@ -77,6 +78,15 @@ def view_task():
     users = []
     l = []
 
+    base64_images = []
+    for img in tasks:
+        if img['image'] is not None:
+            base64_img = b64encode(img['image']).decode('utf-8')
+        else:
+            base64_img = ""
+        base64_images.append(base64_img)
+    print(tasks)
+
     if not tasks:
             return render_template('result.html',title="No Results Found!",msg="The query you entered, matched with no tasks.",color="#fc4747",image="error.png",rd="home"),404
     else:
@@ -86,14 +96,14 @@ def view_task():
                 user = cursor.fetchone()
                 users.append(user)
 
-            for user,task in zip(users,tasks):
+            for user,task,img in zip(users,tasks,base64_images):
                 if user['username'] is not None:
-                    l.append((user['username'],task,))
+                    l.append((user['username'],task,img))
                 else:
-                    l.append(("Deleted User",task,))
+                    l.append(("Deleted User",task,img))
         else:
-            for task in tasks:
-                l.append((user['username'],task,))
+            for task,img in zip(tasks,base64_images):
+                l.append((user.username,task,img))
 
         
         return render_template("tasks.html",full_list=l,title=title),200
@@ -105,13 +115,20 @@ def add_task():
     if "task" in request.form and "time" in request.form and request.method == 'POST':
         task = request.form['task']
         time = request.form['time']
+        image = request.files['image']
+        image_data = None
+
+        if image:
+            image_data = image.read()
+
         user_id = current_user.id
         if is_admin():
             user_id = int(request.form['userid'])
         
-        cursor.execute("INSERT INTO tasks (user_id, time, task) VALUES (%s, %s, %s)",(user_id,time,task))
+        cursor.execute("INSERT INTO tasks (user_id, time, task,image) VALUES (%s, %s, %s, %s)",(user_id,time,task,image_data))
         mysql.connection.commit()
         return redirect(url_for('view_task'))
+    
     cursor.execute("SELECT * FROM persons")
     users = cursor.fetchall()
     return render_template("add_tasks.html",admin=is_admin(),users=users),200
@@ -133,17 +150,30 @@ def delete_task(task_id):
 @login_required
 def update_task(task_id):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    if "image" in request.files:
+        img = request.files['image'].read()
+    
     if request.method == 'POST':
         if is_admin():
-            cursor.execute("UPDATE TASKS SET time = %s, task = %s WHERE id = %s",(request.form['time'], request.form['task'], task_id))
+            if img:
+                cursor.execute("UPDATE TASKS SET time = %s, task = %s, image = %s WHERE id = %s",(request.form['time'], request.form['task'],img, task_id))
+            else:
+                cursor.execute("UPDATE TASKS SET time = %s, task = %s WHERE id = %s",(request.form['time'], request.form['task'], task_id))
         else:
-            cursor.execute("UPDATE TASKS SET time = %s, task = %s WHERE id = %s AND user_id = %s",(request.form['time'], request.form['task'], task_id, current_user.id))
+            if img:
+                cursor.execute("UPDATE TASKS SET time = %s, task = %s, image = %s WHERE id = %s AND user_id = %s",(request.form['time'], request.form['task'],img, task_id, current_user.id))
+            else:
+                cursor.execute("UPDATE TASKS SET time = %s, task = %s WHERE id = %s AND user_id = %s",(request.form['time'], request.form['task'], task_id, current_user.id))
+
         mysql.connection.commit()
         return redirect(url_for('view_task'))
     
-    cursor.execute("SELECT * FROM TASKS WHERE user_id = %s and id = %s",(current_user.id,task_id))
+    
     if is_admin():
         cursor.execute("SELECT * FROM TASKS WHERE id = %s",(task_id,))
+    else:
+        cursor.execute("SELECT * FROM TASKS WHERE user_id = %s and id = %s",(current_user.id,task_id))
+
     task = cursor.fetchone()
     return render_template('update_task.html',task_id=task_id,task=task),200
 
@@ -301,10 +331,10 @@ def search():
             else:
                 title = f"Search result(s) matching with {q}"
                 for task in tasks:
-                    l.append((user['username'],task,))
+                    l.append((user.username,task,))
 
             return render_template("tasks.html",full_list=l,title=title),200
     return render_template("index.html")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True) 

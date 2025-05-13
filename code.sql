@@ -1,2 +1,2 @@
 USE flaskbase;
-SELECT * FROM Persons;
+SELECT * FROM tasks;

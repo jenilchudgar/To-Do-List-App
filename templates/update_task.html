@@ -7,7 +7,7 @@
             margin-left: 25px;
         }
     </style>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         <div class="mb-3 box">
             <label for="exampleFormControlInput1" class="form-label" >Time</label>
             <input class="form-control" name="time" id="exampleFormControlInput1" value="{{task.time}}">
@@ -16,7 +16,10 @@
             <label for="exampleFormControlTextarea1" class="form-label">Task</label>
             <textarea class="form-control" name="task" id="exampleFormControlTextarea1" rows="3">{{task.task}}</textarea>
         </div>
-  
+        <div class="form-group box">
+            <label for="exampleFormControlFile1">Update Task Image</label>
+            <input type="file" class="form-control-file" id="exampleFormControlFile1" accept="image/*" name="image">
+        </div>
         <button type="submit" class="btn btn-success box">Submit</button>
     </form>
 {% endblock %}
