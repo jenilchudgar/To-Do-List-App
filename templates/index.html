@@ -35,6 +35,15 @@
                 </li>
             {% endif %}
         </div>
+
+            {% if is_user %}
+                {{ csrf_input }}
+                <form class="d-flex" method="POST" style="margin-right: 10px;" action="{{url_for('search')}}">
+                    <input class="form-control me-2" type="search" placeholder="Search any Task" aria-label="Search" name="search_box">
+
+                    <button class="btn btn-outline-info" type="submit">Search</button>
+                </form>
+            {% endif %}
         </nav>
 
         <h2 style="margin: 10px; color: black;">Welcome! {{user.username}}</h2>
