@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+    td{
+        vertical-align: middle;
+    }
+</style>
 <div class="container mt-4">
     <h3>{{title}}</h3>
     <div class="table-responsive">
@@ -13,6 +18,7 @@
                     <th scope="col">Start Date</th>
                     <th scope="col">End Date</th>
                     <th scope="col">Task</th>
+                    <th scope="col">Status</th>
                     <th scope="col">Image Link</th>
                     <th scope="col">Actions</th>
                 </tr>
@@ -26,6 +32,12 @@
                         <td>{{ data[1].start_date }}</td> <!-- Start Date -->
                         <td>{{ data[1].end_date }}</td> <!-- End Date -->
                         <td>{{ data[1].task }}</td> <!-- Descr. -->
+                        {% if data[1].status == "Pending" %}
+                            <td style="background-color: #ffff7f;">{{ data[1].status }}</td> <!-- Status Complete -->
+                        {% else %}
+                            <td style="background-color: #9efc68;">{{ data[1].status }}</td> <!-- Status Pending -->
+                        {% endif %}
+                        
                         <td>
                             {% if data[2] %}
                                 <img src="data:image/jpeg;base64,{{ data[2] }}" width="100">

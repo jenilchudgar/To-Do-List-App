@@ -1,4 +1,4 @@
-from flask import Flask,request,render_template,redirect,url_for
+from flask import Flask,request,render_template,redirect,url_for,abort
 from flask_mysqldb import MySQL
 from flask_login import LoginManager,UserMixin,login_user,login_required,logout_user,current_user
 from flask_bcrypt import Bcrypt
@@ -55,6 +55,24 @@ def unauthorized_error(error):
 def not_found_error(error):
     return render_template("result.html",title="File or Path Not Found!",msg="The thing you asked for is not available. Try again later.",color="#fc4747",image="error.png",rd="home"),404
 
+@login_required
+@app.route('/view_user_tasks/<int:user_id>',methods=['GET'])
+def view_user_tasks(user_id):
+    if is_admin():
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute("SELECT * FROM tasks WHERE user_id = %s",(user_id,))
+        tasks = cursor.fetchall()
+        
+        cursor.execute("SELECT * FROM persons WHERE id = %s",(user_id,))
+        user = cursor.fetchone()
+        if user:
+            li,title, status_code = get_tasks(tasks,title=f"Task(s) for {user['username']}")
+            
+            if status_code == 200:
+                return render_template("tasks.html",full_list=li,title=title),status_code
+        return abort(404)
+    return abort(401)
+
 @app.route('/logout')
 @login_required
 def logout():
@@ -65,7 +83,6 @@ def logout():
 @login_required
 def view_task():
     user_id = current_user.id
-    user = current_user
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
     if is_admin():
@@ -76,6 +93,15 @@ def view_task():
         title = "Your Tasks"   
 
     tasks = cursor.fetchall()
+    li,title,status_code = get_tasks(tasks,title)
+
+    if status_code == 200:
+        return render_template("tasks.html",title=title,full_list=li,),status_code
+    return render_template("tasks.html",title=title),status_code
+
+def get_tasks(tasks,title):
+    user = current_user
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     users = []
     l = []
 
@@ -88,7 +114,10 @@ def view_task():
         base64_images.append(base64_img)
 
     if not tasks:
-        return render_template("tasks.html",title="No Task Assigned Currently!"),404
+        li = []
+        title = "No Task Assigned Currently!"
+        status_code = 404
+        return (title,li,status_code)
     
     else:
         assigned_by_list = []
@@ -111,8 +140,10 @@ def view_task():
             for task,img,assigned in zip(tasks,base64_images,assigned_by_list):
                 l.append((user.username,task,img,assigned))
 
-
-        return render_template("tasks.html",full_list=l,title=title),200
+        li = l
+        title = title
+        status_code = 200
+        return (li,title,status_code)
 
 @app.route('/add_task/',methods=['GET','POST'])
 @login_required
@@ -329,31 +360,19 @@ def search():
             cursor.execute("SELECT * FROM tasks WHERE task LIKE %s AND user_id = %s",(pattern,current_user.id))
 
         tasks = cursor.fetchall()
-        users = []
-        l = []
-
-        if not tasks:
-            return render_template('result.html',title="No Results Found!",msg="The query you entered, matched with no tasks.",color="#fc4747",image="error.png",rd="home"),404
+        if is_admin():
+            title = f'Search Results for "{q}" from all users'
         else:
-            if is_admin():
-                title = f"Search result(s) matching with {q} results from all Users"
-                for task in tasks:
-                    cursor.execute("SELECT * FROM persons WHERE id = %s",(task['user_id'],))
-                    user = cursor.fetchone()
-                    users.append(user)
+            title = f'Search Results for "{q}"'
 
-                for user,task in zip(users,tasks):
-                    if user['username'] is not None:
-                        l.append((user['username'],task,))
-                    else:
-                        l.append(("Deleted User",task,))
-            else:
-                title = f"Search result(s) matching with {q}"
-                for task in tasks:
-                    l.append((user.username,task,))
+        li,title,status_code = get_tasks(tasks,title)
+        print(li,title,status_code)
+        if status_code == 200:
+            return render_template("tasks.html",title=title,full_list=li),status_code
+        else:
+            abort(404)
 
-            return render_template("tasks.html",full_list=l,title=title),200
-    return render_template("index.html")
+    return render_template("index.html"),400
 
 if __name__ == '__main__':
     app.run(debug=True) 
