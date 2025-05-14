@@ -22,7 +22,7 @@
                     <tr>
                         <td>{{ data[1].id }}</td> <!-- ID -->
                         <td>{{ data[0] }}</td> <!-- Assigned To (user) -->
-                        <td>ASSIGNED BY</td> <!-- Assigned By -->
+                        <td>{{ data[3]['username'] }}</td> <!-- Assigned By -->
                         <td>{{ data[1].start_date }}</td> <!-- Start Date -->
                         <td>{{ data[1].end_date }}</td> <!-- End Date -->
                         <td>{{ data[1].task }}</td> <!-- Descr. -->

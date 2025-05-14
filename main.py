@@ -86,26 +86,31 @@ def view_task():
         else:
             base64_img = ""
         base64_images.append(base64_img)
-    print(tasks)
 
     if not tasks:
         return render_template("tasks.html",title="No Task Assigned Currently!"),404
     
     else:
+        assigned_by_list = []
+        for task in tasks:
+            cursor.execute("SELECT * FROM persons where id = %s",(task['assigned_by'],))
+            assigned_by_list.append(cursor.fetchone())
+
         if is_admin():
             for task in tasks:
                 cursor.execute("SELECT * FROM persons WHERE id = %s",(task['user_id'],))
                 user = cursor.fetchone()
                 users.append(user)
 
-            for user,task,img in zip(users,tasks,base64_images):
+            for user,task,img,assigned in zip(users,tasks,base64_images,assigned_by_list):
                 if user['username'] is not None:
-                    l.append((user['username'],task,img))
+                    l.append((user['username'],task,img,assigned))
                 else:
-                    l.append(("Deleted User",task,img))
+                    l.append(("Deleted User",task,img,assigned))
         else:
-            for task,img in zip(tasks,base64_images):
-                l.append((user.username,task,img))
+            for task,img,assigned in zip(tasks,base64_images,assigned_by_list):
+                l.append((user.username,task,img,assigned))
+
 
         return render_template("tasks.html",full_list=l,title=title),200
 
