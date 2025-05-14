@@ -70,7 +70,9 @@ def view_user_tasks(user_id):
             
             if status_code == 200:
                 return render_template("tasks.html",full_list=li,title=title),status_code
-        return abort(404)
+        
+        return render_template("result.html",title="No Tasks Currently!",msg="The following user currently has no tasks assigned to him. Click okay to add a task for them.",color="#fc4747",image="error.png",rd="add_task"),404
+
     return abort(401)
 
 @app.route('/logout')
@@ -97,6 +99,8 @@ def view_task():
 
     if status_code == 200:
         return render_template("tasks.html",title=title,full_list=li,),status_code
+    else:
+        title = "Currently you have no Tasks"
     return render_template("tasks.html",title=title),status_code
 
 def get_tasks(tasks,title):
@@ -137,13 +141,16 @@ def get_tasks(tasks,title):
                 else:
                     l.append(("Deleted User",task,img,assigned))
         else:
+            now = datetime.now()
+            date_list = str(task['start_date']).split("-")
             for task,img,assigned in zip(tasks,base64_images,assigned_by_list):
-                l.append((user.username,task,img,assigned))
+                if task['status'] == "Pending" and int(date_list[0]) == now.year and int(date_list[1]) == now.month and int(date_list[2]) <= now.day:
+                    l.append((user.username,task,img,assigned))
 
-        li = l
-        title = title
         status_code = 200
-        return (li,title,status_code)
+        if not l:
+            status_code = 404
+        return (l,title,status_code)
 
 @app.route('/add_task/',methods=['GET','POST'])
 @login_required
@@ -216,7 +223,7 @@ def update_task(task_id):
                 cursor.execute("UPDATE TASKS SET task = %s WHERE id = %s AND user_id = %s",(request.form['task'], task_id, current_user.id))
 
         mysql.connection.commit()
-        return redirect(url_for('view_task'))
+        return redirect(url_for('view_task/'))
     
     
     if is_admin():
@@ -352,7 +359,6 @@ def search():
     if request.method == "POST" and "search_box" in request.form:
         q = request.form['search_box']
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        user = current_user
         pattern = f"%{q}%"
         if is_admin():  
             cursor.execute("SELECT * FROM tasks WHERE task LIKE %s" ,(pattern,))
@@ -373,6 +379,25 @@ def search():
             abort(404)
 
     return render_template("index.html"),400
+
+@login_required
+@app.route('/mark_complete/<int:task_id>')
+def mark_complete(task_id):
+    if is_admin():
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute("UPDATE tasks SET status = %s WHERE id = %s",("Complete",task_id))
+        mysql.connection.commit()
+
+        cursor.execute("SELECT * FROM tasks")
+        tasks = cursor.fetchall()
+        li,title,status_code = get_tasks(tasks=tasks,title=f"Task {task_id} marked Complete!")
+        
+        if status_code == 200:
+            return render_template("tasks.html",title=title,full_list=li),status_code
+        else:
+            abort(404)
+    else:
+        abort(401)
 
 if __name__ == '__main__':
     app.run(debug=True) 

@@ -17,9 +17,10 @@
                     <th scope="col">Assigned By</th>
                     <th scope="col">Start Date</th>
                     <th scope="col">End Date</th>
+                    <th scope="col">Creation DT</th>
                     <th scope="col">Task</th>
                     <th scope="col">Status</th>
-                    <th scope="col">Image Link</th>
+                    <th scope="col">Image</th>
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
@@ -28,21 +29,25 @@
                     <tr>
                         <td>{{ data[1].id }}</td> <!-- ID -->
                         <td>{{ data[0] }}</td> <!-- Assigned To (user) -->
-                        <td>{{ data[3]['username'] }}</td> <!-- Assigned By -->
+                        {% if data[3].role == "admin" %}
+                            <td style="background-color: #fa4848;">{{ data[3]['username'] }}</td> <!-- Assigned By -->
+                        {% else %}
+                            <td style="background-color: #4ef554;">{{ data[3]['username'] }}</td> <!-- Assigned By -->
+                        {% endif %}
                         <td>{{ data[1].start_date }}</td> <!-- Start Date -->
                         <td>{{ data[1].end_date }}</td> <!-- End Date -->
+                        <td>{{ data[1].currentdt }}</td> <!-- End Date -->
                         <td>{{ data[1].task }}</td> <!-- Descr. -->
-                        {% if data[1].status == "Pending" %}
-                            <td style="background-color: #ffff7f;">{{ data[1].status }}</td> <!-- Status Complete -->
-                        {% else %}
-                            <td style="background-color: #9efc68;">{{ data[1].status }}</td> <!-- Status Pending -->
-                        {% endif %}
-                        
+                            {% if data[1].status == "Pending" %}
+                                <td style="background-color: #ffff7f;">{{ data[1].status }}</td> <!-- Status Complete -->
+                            {% else %}
+                                <td style="background-color: #9efc68;">{{ data[1].status }}</td> <!-- Status Pending -->
+                            {% endif %}
                         <td>
                             {% if data[2] %}
                                 <img src="data:image/jpeg;base64,{{ data[2] }}" width="100">
                             {% else %}
-                                No Image Found
+                                No Image Inserted
                            {% endif %}
                         </td>  
                         <td>
@@ -51,9 +56,16 @@
                                     Delete
                                 </button>
                             </form>
+                            
                             <a href="{{ url_for('update_task', task_id=data[1].id) }}" class="btn btn-warning btn-sm ms-2">
                                 Update
                             </a>
+                            
+                            {% if data[1].status == "Pending" %}
+                            <a href="{{ url_for('mark_complete', task_id=data[1].id) }}" class="btn btn-info btn-sm ms-2" onclick="return confirm('Are you sure you want mark this task complete?')" style="margin: 10px 15px;">
+                                Mark Complete
+                            </a>
+                            {% endif %}
                         </td>
                     </tr>
                 {% endfor %}
