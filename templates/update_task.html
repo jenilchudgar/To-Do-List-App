@@ -9,13 +9,20 @@
     </style>
     <form method="post" enctype="multipart/form-data">
         <div class="mb-3 box">
-            <label for="exampleFormControlInput1" class="form-label" >Time</label>
-            <input class="form-control" name="time" id="exampleFormControlInput1" value="{{task.time}}">
-        </div>
-        <div class="mb-3 box">
             <label for="exampleFormControlTextarea1" class="form-label">Task</label>
             <textarea class="form-control" name="task" id="exampleFormControlTextarea1" rows="3">{{task.task}}</textarea>
         </div>
+
+        <div class="mb-3 box">
+            <label class="form-label">Start Date</label>
+            <input type="date" name="start_date">
+        </div>
+        
+        <div class="mb-3 box">
+            <label class="form-label">End Date</label>
+            <input type="date" name="end_date">
+        </div>
+
         <div class="form-group box">
             <label for="exampleFormControlFile1">Update Task Image</label>
             <input type="file" class="form-control-file" id="exampleFormControlFile1" accept="image/*" name="image">

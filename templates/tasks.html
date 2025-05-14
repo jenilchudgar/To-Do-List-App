@@ -8,34 +8,38 @@
             <thead class="table-dark">
                 <tr>
                     <th scope="col">#</th>
-                    <th scope="col">User</th>
-                    <th scope="col">Due Time</th>
+                    <th scope="col">Assigned To</th>
+                    <th scope="col">Assigned By</th>
+                    <th scope="col">Start Date</th>
+                    <th scope="col">End Date</th>
                     <th scope="col">Task</th>
                     <th scope="col">Image Link</th>
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody class="table-group-divider">
-                {% for l in full_list %}
+                {% for data in full_list %}
                     <tr>
-                        <td>{{ l[1].id }}</td>
-                        <td>{{ l[0] }}</td>
-                        <td>{{ l[1].time }}</td>
-                        <td>{{ l[1].task }}</td>  
+                        <td>{{ data[1].id }}</td> <!-- ID -->
+                        <td>{{ data[0] }}</td> <!-- Assigned To (user) -->
+                        <td>ASSIGNED BY</td> <!-- Assigned By -->
+                        <td>{{ data[1].start_date }}</td> <!-- Start Date -->
+                        <td>{{ data[1].end_date }}</td> <!-- End Date -->
+                        <td>{{ data[1].task }}</td> <!-- Descr. -->
                         <td>
-                            {% if l[2] %}
-                                <img src="data:image/jpeg;base64,{{ l[2] }}" width="100">
+                            {% if data[2] %}
+                                <img src="data:image/jpeg;base64,{{ data[2] }}" width="100">
                             {% else %}
                                 No Image Found
                            {% endif %}
                         </td>  
                         <td>
-                            <form method="post" action="{{ url_for('delete_task', task_id=l[1].id) }}" style="display:inline;">
+                            <form method="post" action="{{ url_for('delete_task', task_id=data[1].id) }}" style="display:inline;">
                                 <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this task?')">
                                     Delete
                                 </button>
                             </form>
-                            <a href="{{ url_for('update_task', task_id=l[1].id) }}" class="btn btn-warning btn-sm ms-2">
+                            <a href="{{ url_for('update_task', task_id=data[1].id) }}" class="btn btn-warning btn-sm ms-2">
                                 Update
                             </a>
                         </td>

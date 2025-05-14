@@ -2,6 +2,7 @@ from flask import Flask,request,render_template,redirect,url_for
 from flask_mysqldb import MySQL
 from flask_login import LoginManager,UserMixin,login_user,login_required,logout_user,current_user
 from flask_bcrypt import Bcrypt
+from datetime import datetime,date as dt
 import MySQLdb.cursors
 from base64 import *
 
@@ -60,7 +61,7 @@ def logout():
     logout_user() 
     return render_template("result.html",title="Logout Successful!",msg="We're sorry to see you go, do return later to complete your tasks!",color="#67ffa1",image="tick.png",rd="home"),200
 
-@app.route('/tasks/',methods=['GET'])
+@app.route('/tasks',methods=['GET'])
 @login_required
 def view_task():
     user_id = current_user.id
@@ -88,7 +89,8 @@ def view_task():
     print(tasks)
 
     if not tasks:
-            return render_template('result.html',title="No Results Found!",msg="The query you entered, matched with no tasks.",color="#fc4747",image="error.png",rd="home"),404
+        return render_template("tasks.html",title="No Task Assigned Currently!"),404
+    
     else:
         if is_admin():
             for task in tasks:
@@ -105,27 +107,39 @@ def view_task():
             for task,img in zip(tasks,base64_images):
                 l.append((user.username,task,img))
 
-        
         return render_template("tasks.html",full_list=l,title=title),200
 
 @app.route('/add_task/',methods=['GET','POST'])
 @login_required
 def add_task():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    if "task" in request.form and "time" in request.form and request.method == 'POST':
+    if "task" in request.form and request.method == 'POST':
         task = request.form['task']
-        time = request.form['time']
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        date = dt.today()
+        time = datetime.now()
+        currentdt = f"{date} {time.hour}:{time.minute}:{time.second}"
+
         image = request.files['image']
         image_data = None
 
         if image:
             image_data = image.read()
 
-        user_id = current_user.id
         if is_admin():
             user_id = int(request.form['userid'])
+        else:
+            user_id = current_user.id
         
-        cursor.execute("INSERT INTO tasks (user_id, time, task,image) VALUES (%s, %s, %s, %s)",(user_id,time,task,image_data))
+        assigned_by = current_user.id
+
+        # Status must be pending by default
+        status = "Pending"
+
+        cursor.execute("INSERT INTO tasks (user_id, task,image,start_date,end_date,currentdt,assigned_by,status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+            (user_id,task,image_data,start_date,end_date,currentdt,assigned_by,status)
+        )
         mysql.connection.commit()
         return redirect(url_for('view_task'))
     
@@ -156,14 +170,14 @@ def update_task(task_id):
     if request.method == 'POST':
         if is_admin():
             if img:
-                cursor.execute("UPDATE TASKS SET time = %s, task = %s, image = %s WHERE id = %s",(request.form['time'], request.form['task'],img, task_id))
+                cursor.execute("UPDATE TASKS SET task = %s, image = %s WHERE id = %s",(request.form['task'],img, task_id))
             else:
-                cursor.execute("UPDATE TASKS SET time = %s, task = %s WHERE id = %s",(request.form['time'], request.form['task'], task_id))
+                cursor.execute("UPDATE TASKS SET task = %s WHERE id = %s",(request.form['task'], task_id))
         else:
             if img:
-                cursor.execute("UPDATE TASKS SET time = %s, task = %s, image = %s WHERE id = %s AND user_id = %s",(request.form['time'], request.form['task'],img, task_id, current_user.id))
+                cursor.execute("UPDATE TASKS SET task = %s, image = %s WHERE id = %s AND user_id = %s",(request.form['task'],img, task_id, current_user.id))
             else:
-                cursor.execute("UPDATE TASKS SET time = %s, task = %s WHERE id = %s AND user_id = %s",(request.form['time'], request.form['task'], task_id, current_user.id))
+                cursor.execute("UPDATE TASKS SET task = %s WHERE id = %s AND user_id = %s",(request.form['task'], task_id, current_user.id))
 
         mysql.connection.commit()
         return redirect(url_for('view_task'))
