@@ -2,11 +2,14 @@
 
 {% block content %}
 <style>
-    td{
+    th,td{
         vertical-align: middle;
     }
+    .c{
+        margin: 15px;
+    }
 </style>
-<div class="container mt-4">
+<div class="c">
     <h3>{{title}}</h3>
     <div class="table-responsive">
         <table class="table table-bordered table-hover text-center">
@@ -51,20 +54,27 @@
                            {% endif %}
                         </td>  
                         <td>
-                            <form method="post" action="{{ url_for('delete_task', task_id=data[1].id) }}" style="display:inline;">
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this task?')">
-                                    Delete
-                                </button>
-                            </form>
-                            
-                            <a href="{{ url_for('update_task', task_id=data[1].id) }}" class="btn btn-warning btn-sm ms-2">
-                                Update
-                            </a>
-                            
+                            {% if current_user.id == data[3].id or current_user.role == "admin" %}
+                                <form method="post" action="{{ url_for('delete_task', task_id=data[1].id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this task?')">
+                                        Delete
+                                    </button>
+                                </form>
+                                
+                                <a href="{{ url_for('update_task', task_id=data[1].id) }}" class="btn btn-warning btn-sm ms-2">
+                                    Update
+                                </a>
+                            {% endif %}
                             {% if data[1].status == "Pending" %}
-                            <a href="{{ url_for('mark_complete', task_id=data[1].id) }}" class="btn btn-info btn-sm ms-2" onclick="return confirm('Are you sure you want mark this task complete?')" style="margin: 10px 15px;">
-                                Mark Complete
-                            </a>
+                                <a href="{{ url_for('mark_complete', task_id=data[1].id) }}" class="btn btn-info btn-sm ms-2" onclick="return confirm('Are you sure you want mark this task complete?')">
+                                    Mark Complete
+                                </a>
+                            {% endif %}
+
+                            {% if current_user.role == "admin" %}
+                                <a href="{{ url_for('reassign_task',task_id=data[1].id) }}" class="btn btn-dark btn-sm ms-2">
+                                Reassign
+                                </a>
                             {% endif %}
                         </td>
                     </tr>

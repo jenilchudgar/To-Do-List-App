@@ -142,8 +142,9 @@ def get_tasks(tasks,title):
                     l.append(("Deleted User",task,img,assigned))
         else:
             now = datetime.now()
-            date_list = str(task['start_date']).split("-")
+            date_list = []
             for task,img,assigned in zip(tasks,base64_images,assigned_by_list):
+                date_list = str(task['start_date']).split("-")
                 if task['status'] == "Pending" and int(date_list[0]) == now.year and int(date_list[1]) == now.month and int(date_list[2]) <= now.day:
                     l.append((user.username,task,img,assigned))
 
@@ -184,7 +185,23 @@ def add_task():
             (user_id,task,image_data,start_date,end_date,currentdt,assigned_by,status)
         )
         mysql.connection.commit()
-        return redirect(url_for('view_task'))
+        
+        if is_admin():
+            cursor.execute("SELECT * FROM tasks")
+            title = "All Tasks"
+        else:
+            cursor.execute("SELECT * FROM tasks WHERE user_id = %s",(user_id,))     
+            title = "Your Tasks"   
+
+        tasks = cursor.fetchall()
+        li,title,status_code = get_tasks(tasks,title)
+
+        if status_code == 200:
+            return render_template("tasks.html",title=title,full_list=li,),status_code
+        else:
+            title = "Currently you have no Tasks"
+            
+        return render_template("tasks.html",title=title),status_code
     
     cursor.execute("SELECT * FROM persons")
     users = cursor.fetchall()
@@ -193,6 +210,7 @@ def add_task():
 @app.route('/delete_task/<int:task_id>',methods=['GET','POST'])
 @login_required
 def delete_task(task_id):
+    user_id = current_user.id
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     if is_admin():
@@ -201,11 +219,27 @@ def delete_task(task_id):
         cursor.execute("DELETE FROM TASKS WHERE id = %s and user_id = %s",(task_id,current_user.id))
 
     mysql.connection.commit()
-    return redirect(url_for('view_task'))
+    
+    if is_admin():
+        cursor.execute("SELECT * FROM tasks")
+        title = "All Tasks"
+    else:
+        cursor.execute("SELECT * FROM tasks WHERE user_id = %s",(user_id,))     
+        title = "Your Tasks"   
+
+    tasks = cursor.fetchall()
+    li,title,status_code = get_tasks(tasks,title)
+
+    if status_code == 200:
+        return render_template("tasks.html",title=title,full_list=li,),status_code
+    else:
+        title = "Currently you have no Tasks"
+    return render_template("tasks.html",title=title),status_code
 
 @app.route('/update_task/<int:task_id>',methods=['GET','POST'])
 @login_required
 def update_task(task_id):
+    user_id = current_user.id
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     if "image" in request.files:
         img = request.files['image'].read()
@@ -223,7 +257,22 @@ def update_task(task_id):
                 cursor.execute("UPDATE TASKS SET task = %s WHERE id = %s AND user_id = %s",(request.form['task'], task_id, current_user.id))
 
         mysql.connection.commit()
-        return redirect(url_for('view_task/'))
+        
+        if is_admin():
+            cursor.execute("SELECT * FROM tasks")
+            title = "All Tasks"
+        else:
+            cursor.execute("SELECT * FROM tasks WHERE user_id = %s",(user_id,))     
+            title = "Your Tasks"   
+
+        tasks = cursor.fetchall()
+        li,title,status_code = get_tasks(tasks,title)
+
+        if status_code == 200:
+            return render_template("tasks.html",title=title,full_list=li,),status_code
+        else:
+            title = "Currently you have no Tasks"
+        return render_template("tasks.html",title=title),status_code
     
     
     if is_admin():
@@ -398,6 +447,43 @@ def mark_complete(task_id):
             abort(404)
     else:
         abort(401)
+
+@login_required
+@app.route('/reassign/',methods=['GET','POST'])
+def reassign():
+    ci = current_user.id
+    if is_admin() and request.method == "POST":
+        user_id = request.form['userid']
+        task_id = request.form['task_id']
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute("UPDATE tasks SET user_id = %s, ASSIGNED_BY = %s  WHERE id = %s",(user_id,current_user.id,task_id))
+        mysql.connection.commit()
+
+        cursor.execute("SELECT * FROM persons WHERE id = %s",(user_id,))
+        username = cursor.fetchone()
+
+        if is_admin():
+            cursor.execute("SELECT * FROM tasks")
+            title = f"Task {task_id} reassigned to {username['username']}" 
+
+            tasks = cursor.fetchall()
+            li,title,status_code = get_tasks(tasks,title)
+
+            if status_code == 200:
+                return render_template("tasks.html",title=title,full_list=li,),status_code
+            else:
+                title = "Currently you have no Tasks"
+            return render_template("tasks.html",title=title),status_code
+        
+    return abort(401)
+
+@login_required
+@app.route('/reassign_task/<int:task_id>')
+def reassign_task(task_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT * FROM persons")
+    users = cursor.fetchall()
+    return render_template("reassign.html",title="Select the user who you want to reassign the task to",users=users,task_id=task_id)
 
 if __name__ == '__main__':
     app.run(debug=True) 

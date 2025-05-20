@@ -13,15 +13,17 @@
             <textarea class="form-control" name="task" id="exampleFormControlTextarea1" rows="3">{{task.task}}</textarea>
         </div>
 
-        <div class="mb-3 box">
-            <label class="form-label">Start Date</label>
-            <input type="date" name="start_date">
-        </div>
-        
-        <div class="mb-3 box">
-            <label class="form-label">End Date</label>
-            <input type="date" name="end_date">
-        </div>
+        {% if task.assigned_by == current_user.id or current_user.role == "admin" %}
+            <div class="mb-3 box">
+                <label class="form-label">Start Date</label>
+                <input type="date" name="start_date">
+            </div>
+            
+            <div class="mb-3 box">
+                <label class="form-label">End Date</label>
+                <input type="date" name="end_date">
+            </div>
+        {% endif %}
 
         <div class="form-group box">
             <label for="exampleFormControlFile1">Update Task Image</label>
