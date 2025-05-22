@@ -1,0 +1,70 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.form {
+    width: 320px;
+    height: 350px;
+    background-color: #4422aa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 30px;
+    gap: 20px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+}
+
+.title {
+    font-size: 18px;
+    color: #ffffff;
+    font-weight: 700;
+    text-align: center;
+}
+
+.text {
+    color: #ffffff;
+    text-align: center;
+    font-size: 14px;
+}
+
+.inputContainer {
+    display: flex;
+    gap: 10px;
+}
+
+.inputContainer input {
+    background-color: #ffffff;
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    border: none;
+    border-radius: 7px;
+    font-size: 16px;
+    font-weight: 600;
+    caret-color: #222;
+}
+
+.inputContainer input:disabled {
+    background-color: #e6e6e6ea;
+    cursor: not-allowed;
+}
+
+.verify {
+    cursor: not-allowed;
+}
+
+h1{
+	display: none;
+}

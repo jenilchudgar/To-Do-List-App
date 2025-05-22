@@ -26,6 +26,9 @@
 
     <div>
         <h2 class="center">{{title}}</h2>
+        {% if user and btn == 'Update' %}
+            <h5 style="text-align: right; margin-right: 30px;">Last Updated: {{user.updated_on if user.updated_on else 'NA'}}</h5>
+        {% endif %}
         <form method="POST" enctype="multipart/form-data" action="{{path}}">
             <div class="form-row">
                 <div class="col-md-4 mb-3">

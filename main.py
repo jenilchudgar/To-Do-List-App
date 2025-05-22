@@ -1,15 +1,26 @@
-from flask import Flask,request,render_template,redirect,url_for,abort
-from flask_mysqldb import MySQL
 from flask_login import LoginManager,UserMixin,login_user,login_required,logout_user,current_user
-from flask_bcrypt import Bcrypt
+from flask import Flask,request,render_template,redirect,url_for,abort,session
 from datetime import datetime,date as dt
+from flask_mail import Mail, Message
+from flask_session import Session
+from flask_bcrypt import Bcrypt
+from flask_mysqldb import MySQL
 import MySQLdb.cursors
 from base64 import *
-import re
+import re,random,os
 
+# Flask 
 app = Flask(__name__)
 app.secret_key = 'SECRET_KEY_2025'
 app.url_map.strict_slashes = False
+
+# Mail
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+mail = Mail(app)
 
 # Login Manager
 login_manager = LoginManager()
@@ -24,8 +35,13 @@ app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'jenil1234'
 app.config['MYSQL_DB'] = 'FLASKBASE'
-
 mysql = MySQL(app)
+
+# Initialize Sessions
+app.config["SESSION_PERMANENT"] = False     
+app.config["SESSION_TYPE"] = "filesystem"  
+Session(app)
+
 class User(UserMixin):
     def __init__(self,id,username,role):
         self.id = id
@@ -395,7 +411,7 @@ def login():
 
 @app.route('/register',methods=['GET','POST'])
 def register():
-    if request.method == "POST" and "username" in request.form and "password" in request.form:
+    if request.method == "POST":
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         
         # All field entries
@@ -403,6 +419,8 @@ def register():
         last_name = request.form['last_name']
 
         profile_picture = request.files['profile_picture']
+        if not profile_picture:
+            image_data = url_for("static",filename="images/default_user.jpg")
         image_data = profile_picture.read()
 
         username = request.form['username']
@@ -419,8 +437,6 @@ def register():
         country = request.form['country']
         zip = request.form['zip']
 
-        role = "user"
-
         cursor.execute("SELECT * FROM users WHERE USERNAME = %s",(username, ))
         acc = cursor.fetchone()
 
@@ -432,21 +448,70 @@ def register():
             msg = "Kindly login with that account or create a different account."
             img = "error.png"
             color="#fc4747"
+            
+            return render_template("result.html",title=title,msg=msg,img=img,color=color),code
         else:
-            created_on = datetime.now()
-            cursor.execute("INSERT INTO users (first_name,last_name,username,password,email,city,state,country,zip,role,created_on,profile_picture) VALUES (%s, %s, %s,%s,%s, %s, %s,%s,%s, %s, %s, %s)",(first_name,last_name,username,hashed_password,email,city,state,country,zip,role,created_on,image_data))
+            session['data'] = {
+                "first_name": first_name,
+                "last_name": last_name,
+                "username": username,
+                "password": hashed_password,
+                "email": email,
+                "city": city,
+                "state": state,
+                "country": country,
+                "zip": zip,
+                "role": "user",
+                "created_on": str(datetime.now()),
+                "profile_picture": image_data.hex()
+            }
 
-            title = "You have successfully registered!"
-            msg = "Thank you for registering on our websites. Enjoy the website experience!"
-            img = "tick.png"
-            color="#67ffa1"
+            otp = str(random.randint(100000,999999))
+            session['otp'] = otp
+            message = Message('OTP',sender="todolist.flaskbase@gmail.com",recipients=[email])
+            today = datetime.today()
+            formatted_date = today.strftime("%B %d, %Y")
+            html = render_template("otp_email.html",name=f"{first_name} {last_name}",otp=otp,date=formatted_date,)
+            message.html = html
+            mail.send(message)
 
-            code = 200
-        mysql.connection.commit()
-        
-        return render_template("result.html",title=title,msg=msg,color=color,image=img,rd="login"),code
+            return render_template('verify_otp.html', email=email)
     
-    return render_template("register.html",tite="Register Now!",btn="Register",path="/register")
+    return render_template("register.html",title="Register Now!",btn="Register",path="/register")
+
+@app.route('/verify_otp/',methods=['GET','POST'])
+def verify_otp():
+    otp = ""
+    for i in range(6):
+        otp = otp + request.form[f'input{i}']
+
+    if session['otp'] == otp:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        created_on = datetime.now()
+        data = session['data']
+        
+        cursor.execute("INSERT INTO users (first_name,last_name,username,password,email,city,state,country,zip,role,created_on,profile_picture) VALUES (%s, %s, %s,%s,%s, %s, %s,%s,%s, %s, %s, %s)",(data['first_name'],data['last_name'],data['username'],data['password'],data['email'],data['city'],data['state'],data['country'],data['zip'],data['role'],created_on,data['profile_picture']))
+
+        mysql.connection.commit()
+
+        title = "You have successfully registered!"
+        msg = "Thank you for registering on our websites. Enjoy the website experience!"
+        img = "tick.png"
+        color="#67ffa1"
+
+        code = 200
+        session.clear()
+        
+    else:
+        title = "Incorrect OTP!"
+        msg = "The OTP you entered was incorrect. Kindly retry."
+        img = "error.png"
+        color="#fc4747"
+        
+        code = 422
+
+    return render_template("result.html",title=title,msg=msg,image=img,color=color,rd="login"),code
 
 @login_required
 @app.route('/users',methods=['GET'])
@@ -638,4 +703,4 @@ def update_user(id):
     return render_template("register.html",user=user,title="Update your Profile",path=f"/update_user/{id}",btn="Update")
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(debug=True)

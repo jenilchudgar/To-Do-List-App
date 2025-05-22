@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script defer src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+<form class="form" method="POST" action="{{url_for('verify_otp')}}">
+    <span class="title">Enter OTP</span>
+    <p class="text">We have sent an OTP on your email {{ email }} to verify it.</p>
+
+    <div class="inputContainer">
+        {% for i in range(6) %}
+            <input type="text" maxlength="1" name="input{{i}}" required
+                   oninput="handleInput({{ i }})"
+                   onkeydown="handleBackspace({{ i }}, event)"
+                   {% if i != 0 %}disabled{% endif %}>
+        {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-success verify" disabled>Verify</button>
+</form>
+{% endblock %}
