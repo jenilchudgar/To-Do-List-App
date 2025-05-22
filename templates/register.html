@@ -1,28 +1,89 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<form method="POST">
     {{ csrf_input }}
     <style>
         .box{
             margin-left: 25px;
             margin-right: 100px;
         }
+        small, label{
+            user-select: none;
+            user-select: none; 
+            -webkit-user-select: none; 
+            -moz-user-select: none;    
+            -ms-user-select: none;
+        }
+        .fixedw{
+            width: 50vw;
+        }
+        form, .center{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
-    <div class="mb-3 box">
-        <label for="exampleInputUsername1" class="form-label">Username</label>
-        <input type="text" name="username" class="form-control" id="exampleInputUsername1" aria-describedby="usernameHelp">
-    </div>
-    
-    <div class="mb-3 box">
-        <label for="exampleInputPassword1" class="form-label">Password</label>
-        <input type="password" name="password" class="form-control" id="exampleInputPassword1">
-    </div>
 
-    <div class="mb-3 box">
-        <label for="exampleInputUsername1" class="form-label">City</label>
-        <input type="text" name="city" class="form-control" id="exampleInputUsername1" aria-describedby="usernameHelp">
+    <div>
+        <h2 class="center">{{title}}</h2>
+        <form method="POST" enctype="multipart/form-data" action="{{path}}">
+            <div class="form-row">
+                <div class="col-md-4 mb-3">
+                    <label for="validationDefault01">First name</label>
+                    <input type="text" class="form-control fixedw" id="validationDefault01" placeholder="First name" required name="first_name" value="{{ user.first_name if user else '' }}">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label for="validationDefault02">Last name</label>
+                    <input type="text" class="form-control fixedw" id="validationDefault02" placeholder="Last name" required name="last_name" value="{{ user.last_name if user else '' }}">
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <label for="profilePic">Profile Picture</label>
+                    <input type="file" class="form-control-file" id="profilePic" name="profile_picture" accept="image/*" >
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label for="validationDefaultUsername">Username</label>
+                    <div class="input-group fixedw">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="inputGroupPrepend2">@</span>
+                        </div>
+                        <input type="text" class="form-control" id="validationDefaultUsername" placeholder="Username" aria-describedby="inputGroupPrepend2" required name="username" value="{{ user.username if user else '' }}">
+                    </div>
+                    <label for="exampleInputPassword1" style="margin-top: 10px;">Password</label>
+                    <input type="password" class="form-control fixedw"  id="exampleInputPassword1" placeholder="Password" style="margin-bottom: 10px;" name="password">
+            </div>
+
+            <div class="form-group">
+                <label for="exampleInputEmail1">Email address</label>
+                <input type="email" class="form-control fixedw" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="email@example.com" name="email" value="{{ user.email if user else '' }}">
+                <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+            </div>
+
+            <div class="form-row">
+                <div class="col-md-6 mb-3">
+                    <label for="validationDefault03" style="margin-top: 10px;">City</label>
+                    <input type="text" class="form-control fixedw" id="validationDefault03" placeholder="City" required name="city" value="{{ user.city if user else '' }}">
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="validationDefault04">State</label>
+                    <input type="text" class="form-control fixedw" id="validationDefault04" placeholder="State" required name="state" value="{{ user.state if user else '' }}">
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="validationDefault04">Country</label>
+                    <input type="text" class="form-control fixedw" id="validationDefault04" placeholder="Country" required name="country" value="{{ user.country if user else '' }}">
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="validationDefault05">Zip</label>
+                    <input type="text" class="form-control fixedw" id="validationDefault05" placeholder="Zip" required name="zip" value="{{ user.zip if user else '' }}">
+                </div>
+            </div>
+            
+            <button class="btn btn-success" type="submit"  style="margin-top: 10px; margin-bottom: 50px;">{{btn}}</button>
+        </form>
     </div>
-    <button type="submit" class="btn btn-primary box">Submit</button>
-</form>
 {% endblock %}

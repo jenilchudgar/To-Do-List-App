@@ -8,21 +8,39 @@
     .c{
         margin: 15px;
     }
+    a{
+        color: white;
+        text-decoration: none;
+    }
 </style>
 <div class="c">
-    <h3>{{title}}</h3>
+    <h2>{{title}}</h2>
     <div class="table-responsive">
         <table class="table table-bordered table-hover text-center">
             <thead class="table-dark">
                 <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Assigned To</th>
-                    <th scope="col">Assigned By</th>
-                    <th scope="col">Start Date</th>
-                    <th scope="col">End Date</th>
-                    <th scope="col">Creation DT</th>
+                    <th scope="col">
+                        <a href="?sort_by=id">#</a>
+                    </th>
+                    <th scope="col">
+                        <a href="?sort_by=assigned_to">Assigned To</a>
+                    </th>
+                    <th scope="col">
+                        <a href="?sort_by=assigned_by">Assigned By</a>
+                    </th>
+                    <th scope="col">
+                        <a href="?sort_by=start_date">Start Date</a>
+                    </th>
+                    <th scope="col">
+                        <a href="?sort_by=end_date">End Date</a>
+                    </th>
+                    {% if current_user.role == "admin" %}
+                        <th scope="col">Creation DT</th>
+                    {% endif %}
                     <th scope="col">Task</th>
-                    <th scope="col">Status</th>
+                    <th scope="col">
+                        <a href="?sort_by=status">Status</a>
+                    </th>
                     <th scope="col">Image</th>
                     <th scope="col">Actions</th>
                 </tr>
@@ -32,14 +50,12 @@
                     <tr>
                         <td>{{ data[1].id }}</td> <!-- ID -->
                         <td>{{ data[0] }}</td> <!-- Assigned To (user) -->
-                        {% if data[3].role == "admin" %}
-                            <td style="background-color: #fa4848;">{{ data[3]['username'] }}</td> <!-- Assigned By -->
-                        {% else %}
-                            <td style="background-color: #4ef554;">{{ data[3]['username'] }}</td> <!-- Assigned By -->
-                        {% endif %}
+                        <td >{{ data[3].first_name }} {{ data[3].last_name }}</td> <!-- Assigned By -->
                         <td>{{ data[1].start_date }}</td> <!-- Start Date -->
                         <td>{{ data[1].end_date }}</td> <!-- End Date -->
-                        <td>{{ data[1].currentdt }}</td> <!-- End Date -->
+                        {% if current_user.role == "admin" %}
+                            <td>{{ data[1].currentdt }}</td> 
+                        {% endif %}
                         <td>{{ data[1].task }}</td> <!-- Descr. -->
                             {% if data[1].status == "Pending" %}
                                 <td style="background-color: #ffff7f;">{{ data[1].status }}</td> <!-- Status Complete -->

@@ -40,14 +40,36 @@
             {% if is_user %}
                 {{ csrf_input }}
                 <form class="d-flex" method="POST" style="margin-right: 10px;" action="{{url_for('search')}}">
-                    <input class="form-control me-2" type="search" placeholder="Search any Task" aria-label="Search" name="search_box">
+                    
+                        <span style="color: white;margin: 0; white-space: nowrap; display: flex; align-items: center; margin-right: 10px;">Filter by</span>
+                        <select class="form-select box" aria-label="Default select example" style="display: block; width: 150px;height: min;" name="by" >
+                            {% for col in col_names %}
+                                <option value="{{col}}">{{col.replace("_"," ").capitalize()}}</option>
+                            {% endfor %}
+                        </select>
 
+                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="search_box" style="margin-left: 10px;">
+                    
                     <button class="btn btn-outline-info" type="submit">Search</button>
                 </form>
+                <div class="navbar-logo">
+                    <a class="navbar-brand" href="{{url_for('update_user',id=id)}}">
+                        <img 
+                            src="data:image/jpeg;base64,{{ img }}" 
+                            alt="Logo" 
+                            width="40" 
+                            height="40" 
+                            style="border: 2px solid white; border-radius: 50%; object-fit: cover;"
+                        >
+                    </a>
+                </div>
+
             {% endif %}
         </nav>
-
-        <h2 style="margin: 10px; color: black;">Welcome! {{user.username}}</h2>
+        
+        {% if is_user %}
+            <h2 style="margin: 10px; color: black;">Welcome! @{{user.username}}</h2>
+        {% endif %}
     </div>
    
 {% endblock %}
