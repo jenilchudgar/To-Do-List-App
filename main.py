@@ -1,13 +1,13 @@
 from flask_login import LoginManager,UserMixin,login_user,login_required,logout_user,current_user
-from flask import Flask,request,render_template,redirect,url_for,abort,session
+from flask import Flask,request,render_template,url_for,abort,session,jsonify
 from datetime import datetime,date as dt
 from flask_mail import Mail, Message
+import re,random,os,binascii,joblib
 from flask_session import Session
 from flask_bcrypt import Bcrypt
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 from base64 import *
-import re,random,os
 
 # Flask 
 app = Flask(__name__)
@@ -41,6 +41,22 @@ mysql = MySQL(app)
 app.config["SESSION_PERMANENT"] = False     
 app.config["SESSION_TYPE"] = "filesystem"  
 Session(app)
+
+def time_predictor(tasks):
+    model = joblib.load('task_time_predictor_model.pkl')
+    vectorizer = joblib.load('task_vectorizer.pkl')
+
+    X_new = vectorizer.transform(tasks)
+    predictions = model.predict(X_new)
+
+    caliberated_pred = []
+    for time in predictions:
+        if time < 0 or time == 0:
+            caliberated_pred.append(None)
+            continue
+        caliberated_pred.append(f"{time:.3f}")
+
+    return caliberated_pred
 
 class User(UserMixin):
     def __init__(self,id,username,role):
@@ -449,7 +465,7 @@ def register():
             img = "error.png"
             color="#fc4747"
             
-            return render_template("result.html",title=title,msg=msg,img=img,color=color),code
+            return render_template("result.html",title=title,msg=msg,image=img,color=color,rd="register"),code
         else:
             session['data'] = {
                 "first_name": first_name,
@@ -490,6 +506,8 @@ def verify_otp():
 
         created_on = datetime.now()
         data = session['data']
+        pic = data['profile_picture']
+        pic = binascii.unhexlify(pic)
         
         cursor.execute("INSERT INTO users (first_name,last_name,username,password,email,city,state,country,zip,role,created_on,profile_picture) VALUES (%s, %s, %s,%s,%s, %s, %s,%s,%s, %s, %s, %s)",(data['first_name'],data['last_name'],data['username'],data['password'],data['email'],data['city'],data['state'],data['country'],data['zip'],data['role'],created_on,data['profile_picture']))
 
@@ -540,7 +558,11 @@ def change_role(user_id):
 
         cursor.execute("UPDATE users SET role = %s WHERE id = %s",(role,user_id,))
         mysql.connection.commit()
-        return redirect(url_for('view_users'))
+        
+        cursor.execute("SELECT * FROM users")
+        users = cursor.fetchall()
+
+        return render_template("users.html",users=users)
     
     return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color="#fc4747",image="error.png",rd="home"),401
 
@@ -553,7 +575,11 @@ def delete_user(user_id):
         cursor.execute("DELETE FROM tasks WHERE user_id = %s",(user_id,))
 
         mysql.connection.commit()
-        return redirect(url_for('view_users')),200
+        
+        cursor.execute("SELECT * FROM users")
+        users = cursor.fetchall()
+
+        return render_template("users.html",users=users)
 
     return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color="#fc4747",image="error.png",rd="home"),401
 
@@ -701,6 +727,11 @@ def update_user(id):
 
 
     return render_template("register.html",user=user,title="Update your Profile",path=f"/update_user/{id}",btn="Update")
+
+@app.route('/estimate_time',methods=['GET','POST'])
+def estimate_time():
+    text = request.get_json()
+    return jsonify({"estimated_time":f"{time_predictor([text])} hr(s)"})
 
 if __name__ == '__main__':
     app.run(debug=True)
