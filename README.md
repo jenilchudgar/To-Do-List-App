@@ -28,8 +28,8 @@ It empowers users to manage tasks efficiently through easy creation, modificatio
 | Component | Technology          |
 |-----------|---------------------|
 | Backend   | Python, Flask       |
-| Database  | SQL (e.g., MySQL, PostgreSQL, or others) |
-| Frontend  | HTML, CSS, Bootstrap (optional) |
+| Database  | SQL |
+| Frontend  | HTML, CSS, JS, Bootstrap (optional) |
 | Templates | Jinja2              |
 
 ---
