@@ -2,12 +2,18 @@ from flask_login import LoginManager,UserMixin,login_user,login_required,logout_
 from flask import Flask,request,render_template,url_for,abort,session,jsonify
 from datetime import datetime,date as dt
 from flask_mail import Mail, Message
-import re,random,os,binascii,joblib
 from flask_session import Session
 from flask_bcrypt import Bcrypt
 from flask_mysqldb import MySQL
+import re,random,os,joblib
 import MySQLdb.cursors
 from base64 import *
+
+# Constants
+GREEN = "#67ffa1"
+RED = "#fc4747"
+OK = "tick.png"
+ERROR = "error.png"
 
 # Flask 
 app = Flask(__name__)
@@ -43,8 +49,8 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 def time_predictor(tasks):
-    model = joblib.load('task_time_predictor_model.pkl')
-    vectorizer = joblib.load('task_vectorizer.pkl')
+    model = joblib.load('AI Model//task_time_predictor_model.pkl')
+    vectorizer = joblib.load('AI Model//task_vectorizer.pkl')
 
     X_new = vectorizer.transform(tasks)
     predictions = model.predict(X_new)
@@ -82,14 +88,14 @@ def is_admin():
 
 @app.errorhandler(401)
 def unauthorized_error(error):
-    return render_template("result.html",title="Unauthorized Access!",msg="Kindly login or contact your administrator.",color="#fc4747",image="error.png",rd="home"),401 
+    return render_template("result.html",title="Unauthorized Access!",msg="Kindly login or contact your administrator.",color=RED,image=ERROR,rd="home"),401 
 
 @app.errorhandler(404)
 def not_found_error(error):
-    return render_template("result.html",title="File or Path Not Found!",msg="The thing you asked for is not available. Try again later.",color="#fc4747",image="error.png",rd="home"),404
+    return render_template("result.html",title="File or Path Not Found!",msg="The thing you asked for is not available. Try again later.",color=RED,image=ERROR,rd="home"),404
 
-@login_required
 @app.route('/view_user_tasks/<int:user_id>',methods=['GET'])
+@login_required
 def view_user_tasks(user_id):
     if is_admin():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -104,7 +110,7 @@ def view_user_tasks(user_id):
             if status_code == 200:
                 return render_template("tasks.html",full_list=li,title=title),status_code
         
-        return render_template("result.html",title="No Tasks Currently!",msg="The following user currently has no tasks assigned to him. Click okay to add a task for them.",color="#fc4747",image="error.png",rd="add_task"),404
+        return render_template("result.html",title="No Tasks Currently!",msg="The following user currently has no tasks assigned to him. Click okay to add a task for them.",color=RED,image=ERROR,rd="add_task"),404
 
     return abort(401)
 
@@ -112,7 +118,7 @@ def view_user_tasks(user_id):
 @login_required
 def logout():
     logout_user() 
-    return render_template("result.html",title="Logout Successful!",msg="We're sorry to see you go, do return later to complete your tasks!",color="#67ffa1",image="tick.png",rd="home"),200
+    return render_template("result.html",title="Logout Successful!",msg="We're sorry to see you go, do return later to complete your tasks!",color=GREEN,image=OK,rd="home"),200
 
 @app.route('/tasks',methods=['GET'])
 @login_required
@@ -120,7 +126,7 @@ def view_task():
     sort_by = request.args.get("sort_by")
     if sort_by:
         tasks = order(sort_by)
-        title = f"Entries sorted by '{sort_by.replace("_"," ").capitalize()}'"
+        title = f"Entries sorted by \"{sort_by.replace('_',' ').capitalize()}\""
         li,title,status_code = get_tasks(tasks,title)
 
         return render_template("tasks.html",title=title,full_list=li,),status_code
@@ -167,7 +173,7 @@ def order(sort_by):
         query += "WHERE user_id = %s"
         params.append(current_user.id)
 
-    query += f"ORDER BY {valid_sorts.get(sort_by)}"
+    query += f" ORDER BY {valid_sorts.get(sort_by)}"
     
     cursor.execute(query,params)
     tasks = cursor.fetchall()
@@ -213,10 +219,12 @@ def get_tasks(tasks,title):
         else:
             now = datetime.now()
             date_list = []
+            cursor.execute("SELECT * FROM users WHERE id = %s",(current_user.id,))
+            user = cursor.fetchone()
             for task,img,assigned in zip(tasks,base64_images,assigned_by_list):
                 date_list = str(task['start_date']).split("-")
                 if task['status'] == "Pending" and int(date_list[0]) == now.year and int(date_list[1]) == now.month and int(date_list[2]) <= now.day:
-                    l.append((f"{user.first_name} {user.last_name}",task,img,assigned))
+                    l.append((f"{user['first_name']} {user['last_name']}",task,img,assigned))
 
         status_code = 200
         if not l:
@@ -396,13 +404,15 @@ def login():
         cursor.execute("SELECT * FROM users WHERE USERNAME = %s",(username,))
         acc = cursor.fetchone()
         if acc:
+            session.clear()
+
             is_valid = bcrypt.check_password_hash(acc['password'], password)
             if is_valid:
                 title = "Login Successful!"
                 msg = "You have successfully logged into your website. Enjoy the experience and do your tasks deligently."
                 rd = "home"
-                img = "tick.png"
-                color = "#67ffa1"
+                img = OK
+                color = GREEN
                 code = 200
                 user = User(id=acc['id'],username=acc['username'],role=acc['role'])
 
@@ -411,15 +421,15 @@ def login():
                 title = "Login Failed!"
                 msg = "The Login Failed as you entered the incorrect password. Kindly retry."
                 rd = "login"
-                img = "error.png"
-                color = "#fc4747"
+                img = ERROR
+                color = RED
                 code = 400
         else:
             title = "Your Account doesn't exist!"
             msg = "The Login Failed as your account doesn't exist in our database. Kindly register first."
             rd = "login"
-            img = "error.png"
-            color = "#fc4747"
+            img = ERROR
+            color = RED
             code = 400
         
         return render_template("result.html",title=title,msg=msg,rd=rd,image=img,color=color),code
@@ -435,8 +445,6 @@ def register():
         last_name = request.form['last_name']
 
         profile_picture = request.files['profile_picture']
-        if not profile_picture:
-            image_data = url_for("static",filename="images/default_user.jpg")
         image_data = profile_picture.read()
 
         username = request.form['username']
@@ -446,7 +454,7 @@ def register():
         valid = re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email)
         
         if not valid:
-            return render_template("result.html",title="Invalid Email",msg="The email you entered was incorrect. Kindly enter a valid email.",color="#fc4747",image="error.png",rd="home"),401
+            return render_template("result.html",title="Invalid Email",msg="The email you entered was incorrect. Kindly enter a valid email.",color=RED,image=ERROR,rd="home"),401
 
         city = request.form['city']
         state = request.form['state']
@@ -462,8 +470,8 @@ def register():
             title = "Account already Exists!" 
             code = 400
             msg = "Kindly login with that account or create a different account."
-            img = "error.png"
-            color="#fc4747"
+            img = ERROR
+            color=RED
             
             return render_template("result.html",title=title,msg=msg,image=img,color=color,rd="register"),code
         else:
@@ -479,7 +487,8 @@ def register():
                 "zip": zip,
                 "role": "user",
                 "created_on": str(datetime.now()),
-                "profile_picture": image_data.hex()
+                "profile_picture": image_data
+
             }
 
             otp = str(random.randint(100000,999999))
@@ -507,16 +516,15 @@ def verify_otp():
         created_on = datetime.now()
         data = session['data']
         pic = data['profile_picture']
-        pic = binascii.unhexlify(pic)
         
-        cursor.execute("INSERT INTO users (first_name,last_name,username,password,email,city,state,country,zip,role,created_on,profile_picture) VALUES (%s, %s, %s,%s,%s, %s, %s,%s,%s, %s, %s, %s)",(data['first_name'],data['last_name'],data['username'],data['password'],data['email'],data['city'],data['state'],data['country'],data['zip'],data['role'],created_on,data['profile_picture']))
+        cursor.execute("INSERT INTO users (first_name,last_name,username,password,email,city,state,country,zip,role,created_on,profile_picture) VALUES (%s, %s, %s,%s,%s, %s, %s,%s,%s, %s, %s, %s)",(data['first_name'],data['last_name'],data['username'],data['password'],data['email'],data['city'],data['state'],data['country'],data['zip'],data['role'],created_on,pic))
 
         mysql.connection.commit()
 
         title = "You have successfully registered!"
         msg = "Thank you for registering on our websites. Enjoy the website experience!"
-        img = "tick.png"
-        color="#67ffa1"
+        img = OK
+        color=GREEN
 
         code = 200
         session.clear()
@@ -524,15 +532,15 @@ def verify_otp():
     else:
         title = "Incorrect OTP!"
         msg = "The OTP you entered was incorrect. Kindly retry."
-        img = "error.png"
-        color="#fc4747"
+        img = ERROR
+        color=RED
         
         code = 422
 
     return render_template("result.html",title=title,msg=msg,image=img,color=color,rd="login"),code
 
-@login_required
 @app.route('/users',methods=['GET'])
+@login_required
 def view_users():
     if is_admin():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -540,10 +548,10 @@ def view_users():
         users = cursor.fetchall()
         return render_template("users.html",admin=is_admin(),users=users),200
     else:
-        return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color="#fc4747",image="error.png",rd="home"),401
+        return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color=RED,image=ERROR,rd="home"),401
 
-@login_required
 @app.route('/change_role/<int:user_id>',methods=['GET','POST'])
+@login_required
 def change_role(user_id):
     if is_admin():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -564,10 +572,10 @@ def change_role(user_id):
 
         return render_template("users.html",users=users)
     
-    return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color="#fc4747",image="error.png",rd="home"),401
+    return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color=RED,image=ERROR,rd="home"),401
 
-@login_required
 @app.route('/delete_user/<int:user_id>',methods=['GET','POST'])
+@login_required
 def delete_user(user_id):
     if is_admin():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -581,10 +589,10 @@ def delete_user(user_id):
 
         return render_template("users.html",users=users)
 
-    return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color="#fc4747",image="error.png",rd="home"),401
+    return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color=RED,image=ERROR,rd="home"),401
 
-@login_required
 @app.route('/search',methods=['GET','POST'])
+@login_required
 def search():
     if request.method == "POST" and "search_box" in request.form:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -628,8 +636,8 @@ def search():
 
     return render_template("index.html"),400
 
-@login_required
 @app.route('/mark_complete/<int:task_id>')
+@login_required
 def mark_complete(task_id):
     if is_admin():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -647,8 +655,8 @@ def mark_complete(task_id):
     else:
         abort(401)
 
-@login_required
 @app.route('/reassign/',methods=['GET','POST'])
+@login_required
 def reassign():
     if is_admin() and request.method == "POST":
         user_id = request.form['userid']
@@ -675,16 +683,16 @@ def reassign():
         
     return abort(401)
 
-@login_required
 @app.route('/reassign_task/<int:task_id>')
+@login_required
 def reassign_task(task_id):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM users")
     users = cursor.fetchall()
     return render_template("reassign.html",title="Select the user who you want to reassign the task to",users=users,task_id=task_id)
 
-@login_required
 @app.route('/update_user/<int:id>',methods=['GET',"POST"])
+@login_required
 def update_user(id):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM users WHERE id = %s",(id,))
@@ -723,7 +731,7 @@ def update_user(id):
             cursor.execute("UPDATE users SET first_name = %s, last_name = %s, username = %s, password = %s, email = %s, city = %s, state = %s, country = %s, zip = %s, updated_on = %s WHERE id = %s",(first_name,last_name,username,hashed_password,email,city,state,country,zip,updated_on,current_user.id))
 
         mysql.connection.commit()
-        return render_template("result.html", title="Profile Updated!", msg="Your profile has been successfully updated.", color="#67ffa1", image="tick.png", rd="home")
+        return render_template("result.html", title="Profile Updated!", msg="Your profile has been successfully updated.", color=GREEN, image=OK, rd="home")
 
 
     return render_template("register.html",user=user,title="Update your Profile",path=f"/update_user/{id}",btn="Update")

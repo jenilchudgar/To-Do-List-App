@@ -20,26 +20,26 @@
             <thead class="table-dark">
                 <tr>
                     <th scope="col">
-                        <a href="?sort_by=id">#</a>
+                        <a href="/tasks?sort_by=id">#</a>
                     </th>
                     <th scope="col">
-                        <a href="?sort_by=assigned_to">Assigned To</a>
+                        <a href="/tasks?sort_by=assigned_to">Assigned To</a>
                     </th>
                     <th scope="col">
-                        <a href="?sort_by=assigned_by">Assigned By</a>
+                        <a href="/tasks?sort_by=assigned_by">Assigned By</a>
                     </th>
                     <th scope="col">
-                        <a href="?sort_by=start_date">Start Date</a>
+                        <a href="/tasks?sort_by=start_date">Start Date</a>
                     </th>
                     <th scope="col">
-                        <a href="?sort_by=end_date">End Date</a>
+                        <a href="/tasks?sort_by=end_date">End Date</a>
                     </th>
                     {% if current_user.role == "admin" %}
                         <th scope="col">Creation DT</th>
                     {% endif %}
                     <th scope="col">Task</th>
                     <th scope="col">
-                        <a href="?sort_by=status">Status</a>
+                        <a href="/tasks/?sort_by=status">Status</a>
                     </th>
                     <th scope="col">Image</th>
                     <th scope="col">Actions</th>
