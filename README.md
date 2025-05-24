@@ -43,6 +43,3 @@ Delete tasks you no longer need
 Created by Your Jenil Chudgar – feel free to reach out!
 ✉️ Email: flaskbase.todolist@gmail.com
 🔗 GitHub: jenilchudgar
-
-
-

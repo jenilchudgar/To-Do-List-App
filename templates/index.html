@@ -1,8 +1,63 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    
-    <img src="/static/images/image1.jpg" class="w-100" style="opacity: 0.7; height: 100vh; width: 100%; object-fit: cover; user-select: none; pointer-events: none; position: absolute; top: 0; left: 0; z-index: -1;" alt="">
+    <style>
+        .big-box{
+            margin-top: 7%;
+        }
+
+        .container-fluid {
+            background-color: #1f1f2e; /* Dark background */
+            color: #f1f1f1;
+            width: 70%;
+            box-sizing: border-box;
+            border-radius: 20px;
+        }
+
+        .dashboard-title {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 30px;
+        }
+
+        .user-card {
+            background: #2c2c3c;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+        }
+
+        .user-card:hover {
+            transform: translateY(-3px);
+            background-color: #34344a;
+        }
+
+        .user-name {
+            font-size: 1.2rem;
+            color: #e2e6f0;
+            margin: 0;
+        }
+
+        .last-seen {
+            color: #b0b3c1;
+        }
+
+        .main-area {
+            background-color: #282838;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            height: 100%;
+            color: #ccc;
+        }
+    </style>
+
+    <img src="/static/images/image1.jpg" class="w-100" style="height: 100vh; width: 100%; object-fit: cover; user-select: none; pointer-events: none; position: absolute; top: 0; left: 0; z-index: -1; opacity: 0.8;" alt="">
     
     <div tyle="position: relative; z-index: 1;">
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -71,5 +126,36 @@
             <h2 style="margin: 10px; color: black;">Welcome! @{{user.username}}</h2>
         {% endif %}
     </div>
-   
+
+    {% if is_user %}
+        <div class="big-box">
+            <div class="container-fluid py-5">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h1 class="dashboard-title">Last Seen Users</h1>
+                    </div>
+                </div>
+
+                <div class="row">
+                    {% for user in last_seen_users %}
+                    <div class="col-md-4">
+                        <div class="user-card d-flex align-items-center">
+                            <img src="data:image/jpeg;base64,{{ user[0].profile_picture }}" class="rounded-circle me-3" width="60" height="60" alt="User" style="object-fit: cover;">
+                            <div>
+                                {% if user[1] == "Online" %}
+                                    <small>🟢 Online</small>
+                                {% else %}
+                                    <small>🔴 Offline</small>
+                                {% endif %}
+                                
+                                <p class="user-name">{{ user[0].first_name }} {{ user[0].last_name }}</p>
+                                <small class="last-seen">Last seen: {{ user[0].last_seen }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
