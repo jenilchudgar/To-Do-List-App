@@ -377,7 +377,7 @@ def get_tasks(tasks,title):
                 cursor.execute("SELECT * FROM users WHERE id = %s",(task['user_id'],))
                 user = cursor.fetchone()
                 users.append(user)
-            print(user)
+
             for user,task,img,assigned in zip(users,tasks,base64_images,assigned_by_list):
                 if user['username'] is not None:
                     l.append((f"{user['first_name']} {user['last_name']}",task,img,assigned))
@@ -675,12 +675,12 @@ def home():
                     hours = int(seconds / 3600)
                     u['last_seen'] = f"{hours} hour{'s' if hours != 1 else ''} ago"
                     state = "Offline"
-                elif seconds < 604800:  # less than 7 days
+                elif seconds < 604800:  
                     days = int(seconds // 86400)
-                    u['last_seen_display'] = f"{days} day{'s' if days != 1 else ''} ago"
+                    u['last_seen'] = f"{days} day{'s' if days != 1 else ''} ago"
                     state = "Offline"
                 else:
-                    u['last_seen_display'] = "A long time ago"
+                    u['last_seen'] = "A long time ago"
                     state = "Offline"
                 
                 new_users.append((u,state))
@@ -749,11 +749,11 @@ def view_users():
     else:
         return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color=RED,image=ERROR,rd="home"),401
 
-@app.route('/update_user/<int:id>',methods=['GET',"POST"])
+@app.route('/update_user/<int:user_id>',methods=['GET',"POST"])
 @login_required
-def update_user(id):
+def update_user(user_id):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute("SELECT * FROM users WHERE id = %s",(id,))
+    cursor.execute("SELECT * FROM users WHERE id = %s",(user_id,))
     user = cursor.fetchone()
 
     if not user or not(user['id'] == current_user.id):
@@ -786,7 +786,7 @@ def update_user(id):
         return render_template("result.html", title="Profile Updated!", msg="Your profile has been successfully updated.", color=GREEN, image=OK, rd="home")
 
 
-    return render_template("register.html",user=user,title="Update your Profile",path=f"/update_user/{id}",btn="Update")
+    return render_template("register.html",user=user,title="Update your Profile",path=f"/update_user/{user_id}",btn="Update")
 
 @app.route('/delete_user/<int:user_id>',methods=['GET','POST'])
 @login_required
@@ -838,7 +838,7 @@ def profile(user_id):
     user['profile_picture'] = b64encode(user['profile_picture']).decode('utf-8')
     with open("static/json/country_codes.json","r") as f:
         data = json.load(f)
-    print(data)
+
     code = "in"
     for key,value in data.items():
         if user['country'] in value:
