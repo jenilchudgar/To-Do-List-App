@@ -24,13 +24,26 @@
             <input type="date" name="end_date">
         </div>
 
+        <select class="form-select box" aria-label="Default select example" style="display: block; width: 200px; margin-top: 10px; margin-bottom: 10px;" name="priotity" >
+                {% for p in priority %}
+                    {% if p == "Urgent" %}
+                        <option value="{{p}}">🔴 {{p}}</option>
+
+                    {% elif p == "Important" %}
+                        <option value="{{p}}">🟡 {{p}}</option>
+                    
+                    {% elif p == "Least Important" %}
+                        <option value="{{p}}">🟢 {{p}}</option>
+                    {% endif %}
+                {% endfor %}
+        </select>
+
         <div class="form-group box">
             <label for="exampleFormControlFile1">Task Image</label>
             <input type="file" class="form-control-file" id="exampleFormControlFile1" accept="image/*" name="image">
         </div>
         {% if admin %}
             <select class="form-select box" aria-label="Default select example" style="display: block; width: 200px; margin-top: 10px;" name="userid" >
-                <option selected>Users</option>
                 {% for user in users %}
                     <option value="{{user.id}}">{{user.username}}</option>
                 {% endfor %}

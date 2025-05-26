@@ -3,9 +3,9 @@ from flask import Flask,request,render_template,abort,jsonify,session
 from datetime import datetime,date as dt
 from flask_mail import Mail, Message
 from flask_session import Session
+import re,random,os,joblib,json
 from flask_bcrypt import Bcrypt
 from flask_mysqldb import MySQL
-import re,random,os,joblib
 import MySQLdb.cursors
 from base64 import *
 
@@ -39,7 +39,7 @@ bcrypt = Bcrypt(app)
 app.config['MYSQL_PORT'] = 3306
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'jenil1234'
+app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
 app.config['MYSQL_DB'] = 'FLASKBASE'
 mysql = MySQL(app)
 
@@ -47,6 +47,9 @@ mysql = MySQL(app)
 app.config["SESSION_PERMANENT"] = False     
 app.config["SESSION_TYPE"] = "filesystem"  
 Session(app)
+
+# AI Model 
+model = joblib.load('AI Model//task_time_predictor_model.pkl')
 
 # User Model
 class User(UserMixin):
@@ -403,6 +406,7 @@ def add_task():
         task = request.form['task']
         start_date = request.form['start_date']
         end_date = request.form['end_date']
+        priotity = request.form['priotity']
 
         date = dt.today()
         time = datetime.now()
@@ -424,8 +428,8 @@ def add_task():
 
         status = "Pending"
 
-        cursor.execute("INSERT INTO tasks (user_id, task,image,start_date,end_date,currentdt,assigned_by,status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-            (user_id,task,image_data,start_date,end_date,currentdt,assigned_by,status)
+        cursor.execute("INSERT INTO tasks (user_id, task,image,start_date,end_date,currentdt,assigned_by,status,priority) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            (user_id,task,image_data,start_date,end_date,currentdt,assigned_by,status,priotity)
         )
         mysql.connection.commit()
         
@@ -448,7 +452,7 @@ def add_task():
     
     cursor.execute("SELECT * FROM users")
     users = cursor.fetchall()
-    return render_template("add_tasks.html",admin=is_admin(),users=users),200
+    return render_template("add_tasks.html",admin=is_admin(),users=users,priority=["Urgent","Important","Least Important"]),200
 
 @app.route('/delete_task/<int:task_id>',methods=['GET','POST'])
 @login_required
@@ -560,7 +564,6 @@ def estimate_time():
     })
 
 def time_predictor(tasks):  
-    model = joblib.load('AI Model//task_time_predictor_model.pkl')
     vectorizer = joblib.load('AI Model//task_vectorizer.pkl')
 
     X_new = vectorizer.transform(tasks)
@@ -714,8 +717,10 @@ def search():
             else:
                 query += f"{by} LIKE %s AND user_id = %s"
                 params.extend([f"%{q}%", current_user.id])
-
-        cursor.execute(query, params)
+        try:
+            cursor.execute(query, params)
+        except:
+            abort(401) 
         tasks = cursor.fetchall()
 
         if is_admin():
@@ -759,7 +764,6 @@ def update_user(id):
         last_name = request.form['last_name']
 
         username = request.form['username']
-        password = request.form['password']
 
         email = request.form['email']
 
@@ -771,17 +775,12 @@ def update_user(id):
         updated_on = datetime.now()
         profile_picture = request.files['profile_picture']
 
-        if password:
-            hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-        else:
-            hashed_password = user['password'] 
-        
         if profile_picture:
             image_data = profile_picture.read()
 
-            cursor.execute("UPDATE users SET first_name = %s, last_name = %s, username = %s, password = %s, email = %s, city = %s, state = %s, country = %s, zip = %s, updated_on = %s, profile_picture = %s WHERE id = %s",(first_name,last_name,username,hashed_password,email,city,state,country,zip,updated_on,image_data,current_user.id))
+            cursor.execute("UPDATE users SET first_name = %s, last_name = %s, username = %s, email = %s, city = %s, state = %s, country = %s, zip = %s, updated_on = %s, profile_picture = %s WHERE id = %s",(first_name,last_name,username,email,city,state,country,zip,updated_on,image_data,current_user.id))
         else:
-            cursor.execute("UPDATE users SET first_name = %s, last_name = %s, username = %s, password = %s, email = %s, city = %s, state = %s, country = %s, zip = %s, updated_on = %s WHERE id = %s",(first_name,last_name,username,hashed_password,email,city,state,country,zip,updated_on,current_user.id))
+            cursor.execute("UPDATE users SET first_name = %s, last_name = %s, username = %s, email = %s, city = %s, state = %s, country = %s, zip = %s, updated_on = %s WHERE id = %s",(first_name,last_name,username,email,city,state,country,zip,updated_on,current_user.id))
 
         mysql.connection.commit()
         return render_template("result.html", title="Profile Updated!", msg="Your profile has been successfully updated.", color=GREEN, image=OK, rd="home")
@@ -830,5 +829,23 @@ def change_role(user_id):
     
     return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color=RED,image=ERROR,rd="home"),401
 
+@app.route('/profile/<int:user_id>')
+@login_required
+def profile(user_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT * FROM users WHERE id = %s",(user_id,))
+    user = cursor.fetchone()
+    user['profile_picture'] = b64encode(user['profile_picture']).decode('utf-8')
+    with open("static/json/country_codes.json","r") as f:
+        data = json.load(f)
+    print(data)
+    code = "in"
+    for key,value in data.items():
+        if user['country'] in value:
+            code = key
+            break
+
+    return render_template("profile.html",user=user,code=code)
+    
 if __name__ == '__main__':
     app.run(debug=True)

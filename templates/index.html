@@ -7,7 +7,7 @@
         }
 
         .container-fluid {
-            background-color: #1f1f2e; /* Dark background */
+            background-color: #1f1f2e;
             color: #f1f1f1;
             width: 70%;
             box-sizing: border-box;
@@ -108,7 +108,7 @@
                     <button class="btn btn-outline-info" type="submit">Search</button>
                 </form>
                <div class="navbar-logo">
-                     <a class="navbar-brand" href="{{url_for('update_user',id=id)}}">
+                     <a class="navbar-brand" href="{{url_for('profile',user_id=id)}}">
                         <img 
                             src="data:image/jpeg;base64,{{ img }}" 
                             alt="Logo" 

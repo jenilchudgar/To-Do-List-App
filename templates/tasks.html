@@ -35,8 +35,11 @@
                         <a href="/tasks?sort_by=end_date">End Date</a>
                     </th>
                     {% if current_user.role == "admin" %}
-                        <th scope="col">Creation DT</th>
+                    <th scope="col">Creation DT</th>
                     {% endif %}
+                    <th scope="col">
+                        <a href="#">Priority</a>
+                    </th>
                     <th scope="col">Task</th>
                     <th scope="col">
                         <a href="/tasks/?sort_by=status">Status</a>
@@ -56,6 +59,15 @@
                         {% if current_user.role == "admin" %}
                             <td>{{ data[1].currentdt }}</td> 
                         {% endif %}
+                        
+                        {% if data[1].priority == "Urgent" %}
+                            <td style="background-color: #F7A8A8;">{{ data[1].priority }}</td>
+                        {% elif data[1].priority == "Important" %}
+                            <td style="background-color: #FFF6A3;">{{ data[1].priority }}</td>
+                        {% elif data[1].priority == "Least Important" %}
+                            <td style="background-color: #A8E6CF;">{{ data[1].priority }}</td>
+                        {% endif %}
+
                         <td>{{ data[1].task }}</td> <!-- Descr. -->
                             {% if data[1].status == "Pending" %}
                                 <td style="background-color: #ffff7f;">{{ data[1].status }}</td> <!-- Status Complete -->

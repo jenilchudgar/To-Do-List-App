@@ -54,8 +54,10 @@
                         </div>
                         <input type="text" class="form-control" id="validationDefaultUsername" placeholder="Username" aria-describedby="inputGroupPrepend2" required name="username" value="{{ user.username if user else '' }}">
                     </div>
-                    <label for="exampleInputPassword1" style="margin-top: 10px;">Password</label>
-                    <input type="password" class="form-control fixedw"  id="exampleInputPassword1" placeholder="Password" style="margin-bottom: 10px;" name="password">
+                    {% if user and btn != 'Update' %}
+                        <label for="exampleInputPassword1" style="margin-top: 10px;">Password</label>
+                        <input type="password" class="form-control fixedw"  id="exampleInputPassword1" placeholder="Password" style="margin-bottom: 10px;" name="password">
+                    {% endif %}
             </div>
 
             <div class="form-group">
