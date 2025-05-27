@@ -204,7 +204,7 @@ def register():
             message.html = html
             mail.send(message)
 
-            return render_template('verify_otp.html', email=email)
+            return render_template('verify_otp.html', email=email,redirect="verify_otp")
     
     return render_template("register.html",title="Register Now!",btn="Register",path="/register")
 
@@ -659,7 +659,6 @@ def home():
                 u['profile_picture'] = b64encode(u['profile_picture']).decode('utf-8')
                 diff = time - u['last_seen']
                 seconds = diff.total_seconds()
-                print(seconds)
                 # Determine human-readable time
                 if seconds <= 10:
                     u['last_seen'] = "Just now"
@@ -846,6 +845,60 @@ def profile(user_id):
             break
 
     return render_template("profile.html",user=user,code=code)
+
+@app.route('/change_password/<int:user_id>',methods=['GET','POST'])
+@login_required
+def change_password(user_id):
+    if (current_user.id == user_id) and request.method == "POST":
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute("SELECT * FROM users WHERE id = %s",(user_id,))
+        user = cursor.fetchone()
+
+        session['password1'] = request.form['password1']
+        session['password2'] = request.form['password2']
+        session['old_pass'] = request.form['old_pass']
+        
+        otp = str(random.randint(100000,999999))
+        session['otp'] = otp
+        message = Message('OTP',sender="todolist.flaskbase@gmail.com",recipients=[user['email']])
+        today = datetime.today()
+        formatted_date = today.strftime("%B %d, %Y")
+        html = render_template("otp_email.html",name=f"{user['first_name']} {user['last_name']}",otp=otp,date=formatted_date,)
+        message.html = html
+        mail.send(message)
+        return render_template('verify_otp.html',redirect="password")
+        
+    else:
+        return render_template("change_password.html")
+
+@app.route('/password', methods=['GET', 'POST'])
+@login_required
+def password():
+    user_id = current_user.id
+    password1 = session['password1']
+    password2 = session['password2']
+    old_pass = session['old_pass']
+    if password1 == old_pass or password2 == old_pass:
+        return render_template("result.html",title="Same Passwords!",msg="The new and old passwords were same. Kindly retry.",color=RED,image=ERROR,rd="home"),404
     
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT * FROM users WHERE id = %s",(user_id,))
+    user = cursor.fetchone()
+    
+    otp = ""
+    if bcrypt.check_password_hash(user['password'],old_pass):
+        for i in range(6):
+            otp = otp + request.form[f'input{i}']
+
+        if session['otp'] == otp:
+            if password1 == password2:
+                hashed_pass = bcrypt.generate_password_hash(password1).decode('utf-8')
+                cursor.execute("UPDATE users SET password = %s WHERE id = %s",(hashed_pass,user_id))
+                mysql.connection.commit()
+                return render_template("result.html",title="Password Changed Successfully!",msg="Your password has now been updated. Kindly login again to continue for work.",color=GREEN,image=OK,rd="login"),200
+            
+            else:
+                return render_template("result.html",title="The password didn't match.",msg="The new passwords you entered didn't match kindly retry.",color=RED,image=ERROR,rd="home"),404
+
 if __name__ == '__main__':
     app.run(debug=True)

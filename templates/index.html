@@ -1,197 +1,219 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <style>
-        .big-box{
-            margin-top: 7%;
-        }
+<style>
+    .big-box {
+        margin-top: 7%;
+    }
 
-        .container-fluid {
-            background-color: #1f1f2e;
-            color: #f1f1f1;
-            width: 70%;
-            box-sizing: border-box;
-            border-radius: 20px;
-        }
+    .container-fluid {
+        background-color: #1f1f2e;
+        color: #f1f1f1;
+        width: 70%;
+        box-sizing: border-box;
+        border-radius: 20px;
+    }
 
-        .dashboard-title {
-            font-size: 2rem;
-            font-weight: bold;
-            text-align: center;
-            color: #ffffff;
-            margin-bottom: 30px;
-        }
+    .dashboard-title {
+        font-size: 2rem;
+        font-weight: bold;
+        text-align: center;
+        color: #ffffff;
+        margin-bottom: 30px;
+    }
 
-        .user-card {
-            background: #2c2c3c;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            transition: all 0.3s ease-in-out;
-            cursor: pointer;
-        }
+    .user-card {
+        background: #2c2c3c;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease-in-out;
+        cursor: pointer;
+    }
 
-        .user-card:hover {
-            transform: translateY(-3px);
-            background-color: #34344a;
-        }
+    .user-card:hover {
+        transform: translateY(-3px);
+        background-color: #34344a;
+    }
 
-        .user-name {
-            font-size: 1.2rem;
-            color: #e2e6f0;
-            margin: 0;
-        }
+    .user-name {
+        font-size: 1.2rem;
+        color: #e2e6f0;
+        margin: 0;
+    }
 
-        .last-seen {
-            color: #b0b3c1;
-        }
+    .last-seen {
+        color: #b0b3c1;
+    }
 
-        .main-area {
-            background-color: #282838;
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            height: 100%;
-            color: #ccc;
-        }
+    .main-area {
+        background-color: #282838;
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        height: 100%;
+        color: #ccc;
+    }
 
-        .hover-effect{
-            border-radius: 50%; 
-            object-fit: cover;
-            transition: all 0.3s ease;
-        }
+    .hover-effect {
+        border-radius: 50%;
+        object-fit: cover;
+        transition: all 0.3s ease;
+    }
 
-        .hover-effect:hover{
-            transform: translateY(-3px) scale(1.05) rotate(1deg);
-            filter: contrast(120%) brightness(1.1);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
-        }
+    .hover-effect:hover {
+        transform: translateY(-3px) scale(1.05) rotate(1deg);
+        filter: contrast(120%) brightness(1.1);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+    }
 
-        .dropdown-item:active,
-        .dropdown-item:focus
-        {
-            background-color: transparent !important;
-            color: inherit !important;
-        }
+    .dropdown-item:active,
+    .dropdown-item:focus {
+        background-color: transparent !important;
+        color: inherit !important;
+    }
 
-        .dropdown-item {
-        -webkit-tap-highlight-color: transparent;  
+    .dropdown-item {
+        -webkit-tap-highlight-color: transparent;
         outline: none;
-        }
+    }
 
-        .dropdown-item:hover{
-            transform: translateY(-2px) scale(1.05);
-            background-color: #eeeeee !important;
-        }
-    </style>
+    .dropdown-item:hover {
+        transform: translateY(-2px) scale(1.05);
+        background-color: #eeeeee !important;
+    }
 
-    <img src="/static/images/image1.jpg" class="w-100" style="height: 100vh; width: 100%; object-fit: cover; user-select: none; pointer-events: none; position: absolute; top: 0; left: 0; z-index: -1; opacity: 0.8;" alt="">
+    #new_click:hover {
+        color: var(--bs-nav-link-hover-color);
+    }
+</style>
     
-    <div tyle="position: relative; z-index: 1;">
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<img src="/static/images/image1.jpg" class="w-100"
+    style="height: 100vh; width: 100%; object-fit: cover; user-select: none; pointer-events: none; position: absolute; top: 0; left: 0; z-index: -1; opacity: 0.8;"
+    alt="">
+
+<div style="position: relative; z-index: 1;">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
         <a class="navbar-brand" href="/" style="margin-left: 10px;">Home</a>
 
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         </button>
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-                <a class="nav-link" href="/login">Login</a>
-            </li>
-            <li class="nav-item active">
-                <a class="nav-link" href="/register">Register</a>
-            </li>
-            {% if is_user %}
-                <li class="nav-item active">
-                    <a class="nav-link" href="/logout">Logout</a>
-                </li>
+                {% if not is_user %}
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/register">Register</a>
+                    </li>
+                {% endif %}
 
-                <li class="nav-item active">
-                    <a class="nav-link" href="/tasks">View Tasks</a>
-                </li>
-            {% endif %}
+                {% if is_user %}
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
 
-            {% if admin %}
-                <li class="nav-item active">
-                    <a class="nav-link" href="/users">View Users</a>
-                </li>
+                    <li class="nav-item dropdown" >
+                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false" style="color: var(--bs-nav-link-color);" id="new_click">
+                            Tasks
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/tasks">View All Tasks</a></li>
+                            <li><a class="dropdown-item" href="/add_task">Add Task</a></li>
+                        </ul>
+                    </li>
+                {% endif %}
 
-            {% endif %}
+                {% if admin %}
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/users">View Users</a>
+                    </li>
+                {% endif %}
         </div>
-
-            {% if is_user %}
-                {{ csrf_input }}
-                <form class="d-flex" method="POST" style="margin-right: 10px;" action="{{url_for('search')}}">
-                    
-                        <span style="color: white;margin: 0; white-space: nowrap; display: flex; align-items: center; margin-right: 10px;">Filter by</span>
-                        <select class="form-select box" aria-label="Default select example" style="display: block; width: 150px;height: min;" name="by" >
-                            {% for col in col_names %}
-                                <option value="{{col}}">{{col.replace("_"," ").capitalize()}}</option>
-                            {% endfor %}
-                        </select>
-
-                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="search_box" style="margin-left: 10px;">
-                    
-                    <button class="btn btn-outline-info" type="submit">Search</button>
-                </form>
-                <div class="dropdown dropstart">
-                    <button data-bs-toggle="dropdown" aria-expanded="false" style="background: none; border: none;">
-                        <div class="navbar-logo">
-                            <img 
-                                src="data:image/jpeg;base64,{{ img }}" 
-                                alt="Profile Picture" 
-                                width="40" 
-                                height="40" 
-                                class="hover-effect"
-                            >
-                        </div>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{url_for('profile',user_id=id)}}">View Profile</a></li>
-                        <li><a class="dropdown-item" href="{{url_for('update_user',user_id=id)}}">Update Profile</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#">Change Password</a></li>
-                    </ul>
-                </div>
-            {% endif %}
-        </nav>
-        
         {% if is_user %}
-            <h2 style="margin: 10px; color: black;">Welcome! @{{user.username}}</h2>
+        {{ csrf_input }}
+        <form class="d-flex" method="POST" style="margin-right: 10px;" action="{{url_for('search')}}">
+
+            <span
+                style="color: white;margin: 0; white-space: nowrap; display: flex; align-items: center; margin-right: 10px;">Filter
+                by</span>
+            <select class="form-select box" aria-label="Default select example"
+                style="display: block; width: 150px;height: min;" name="by">
+                {% for col in col_names %}
+                <option value="{{col}}">{{col.replace("_"," ").capitalize()}}</option>
+                {% endfor %}
+            </select>
+
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="search_box"
+                style="margin-left: 10px;">
+
+            <button class="btn btn-outline-info" type="submit">Search</button>
+        </form>
+        <div class="dropdown dropstart">
+            <button data-bs-toggle="dropdown" aria-expanded="false" style="background: none; border: none;">
+                <div class="navbar-logo">
+                    <img src="data:image/jpeg;base64,{{ img }}" alt="Profile Picture" width="40" height="40"
+                        class="hover-effect">
+                </div>
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{url_for('profile',user_id=id)}}">View Profile</a></li>
+                <li><a class="dropdown-item" href="{{url_for('update_user',user_id=id)}}">Update Profile</a></li>
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+                <li><a class="dropdown-item" href="{{url_for('change_password',user_id=id)}}">Change Password</a></li>
+            </ul>
+        </div>
         {% endif %}
-    </div>
+    </nav>
 
     {% if is_user %}
-        <div class="big-box">
-            <div class="container-fluid py-5">
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h1 class="dashboard-title">Last Seen Users</h1>
-                    </div>
-                </div>
+    <h2 style="margin: 10px; color: black;">Welcome! @{{user.username}}</h2>
+    {% endif %}
+</div>
 
-                <div class="row">
-                    {% for user in last_seen_users %}
-                    <div class="col-md-4">
-                        <div class="user-card d-flex align-items-center">
-                            <img src="data:image/jpeg;base64,{{ user[0].profile_picture }}" class="rounded-circle me-3" width="60" height="60" alt="User" style="object-fit: cover;">
-                            <div>
-                                {% if user[1] == "Online" %}
-                                    <small>🟢 Online</small>
-                                {% else %}
-                                    <small>🔴 Offline</small>
-                                {% endif %}
-                                
-                                <p class="user-name">{{ user[0].first_name }} {{ user[0].last_name }}</p>
-                                <small class="last-seen">Last seen: {{ user[0].last_seen }}</small>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
+{% if is_user %}
+<div class="big-box">
+    <div class="container-fluid py-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="dashboard-title">Last Seen Users</h1>
             </div>
         </div>
-    {% endif %}
+
+        <div class="row">
+            {% for user in last_seen_users %}
+            <a href="/profile/{{user[0].id}}" style="text-decoration: none; color: inherit;">
+                <div class="col-md-4">
+                    <div class="user-card d-flex align-items-center">
+                        <img src="data:image/jpeg;base64,{{ user[0].profile_picture }}" class="rounded-circle me-3"
+                            width="60" height="60" alt="User" style="object-fit: cover;">
+                        <div>
+                            {% if user[1] == "Online" %}
+                            <small>🟢 Online</small>
+                            {% else %}
+                            <small>🔴 Offline</small>
+                            {% endif %}
+
+                            <p class="user-name">{{ user[0].first_name }} {{ user[0].last_name }}</p>
+                            <small class="last-seen">Last seen: {{ user[0].last_seen }}</small>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
