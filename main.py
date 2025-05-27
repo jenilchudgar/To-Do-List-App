@@ -1,6 +1,6 @@
 from flask_login import LoginManager,UserMixin,login_user,login_required,logout_user,current_user
 from flask import Flask,request,render_template,abort,jsonify,session
-from datetime import datetime,date as dt
+from datetime import datetime,date as dt, timedelta
 from flask_mail import Mail, Message
 from flask_session import Session
 import re,random,os,joblib,json
@@ -83,13 +83,30 @@ def unauthorized_error(error):
 def not_found_error(error):
     return render_template("result.html",title="File or Path Not Found!",msg="The thing you asked for is not available. Try again later.",color=RED,image=ERROR,rd="home"),404
 
-# Last Seen Updation
+# Updation
 @app.before_request
-def update_last_seen():
+def update():
     if current_user.is_authenticated:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        # Streak
+        cursor.execute("SELECT * FROM users WHERE id = %s",(current_user.id,))
+        user = cursor.fetchone()
+        ls = user['last_seen'].date()
+        today = dt.today()
+
+        if ls == today:
+            # Already Updated
+            pass
+        elif ls == today - timedelta(days=1):
+            cursor.execute("UPDATE users SET streak = %s WHERE id = %s",(user['streak'] + 1,current_user.id))
+        else:
+            cursor.execute("UPDATE users SET streak = %s WHERE id = %s",(1,current_user.id))
+        
+        # Last Seen
         last_seen = datetime.now()
         cursor.execute("UPDATE users SET last_seen = %s WHERE id = %s",(last_seen,current_user.id))
+
         mysql.connection.commit()
 
 # Login and Registration
@@ -227,8 +244,9 @@ def verify_otp():
         data = session['data']
         pic = data['profile_picture']
         last_seen = datetime.now()
+        streak = 1
         
-        cursor.execute("INSERT INTO users (first_name,last_name,username,password,email,city,state,country,zip,role,created_on,profile_picture,last_seen) VALUES (%s, %s, %s,%s,%s, %s, %s,%s,%s, %s, %s, %s, %s)",
+        cursor.execute("INSERT INTO users (first_name,last_name,username,password,email,city,state,country,zip,role,created_on,profile_picture,last_seen,streak) VALUES (%s, %s, %s,%s,%s, %s, %s,%s,%s, %s, %s, %s, %s, %s)",
                        (
                            data['first_name'],
                             data['last_name'],
@@ -243,6 +261,7 @@ def verify_otp():
                             created_on,
                             pic,
                             last_seen,
+                            streak
                         )
                     )
 
