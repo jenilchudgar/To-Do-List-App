@@ -6,8 +6,12 @@ from flask_session import Session
 import re,random,os,joblib,json
 from flask_bcrypt import Bcrypt
 from flask_mysqldb import MySQL
+from dotenv import load_dotenv
 import MySQLdb.cursors
 from base64 import *
+
+# Load Environment
+load_dotenv()
 
 # Constants
 GREEN = "#67ffa1"
@@ -919,5 +923,9 @@ def password():
             else:
                 return render_template("result.html",title="The password didn't match.",msg="The new passwords you entered didn't match kindly retry.",color=RED,image=ERROR,rd="home"),404
 
+# Production OK
+@app.route('/healthz')
+def health_check():
+    return "OK", 200
 if __name__ == '__main__':
     app.run(debug=True)
