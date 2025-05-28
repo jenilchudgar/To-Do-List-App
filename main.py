@@ -6,12 +6,8 @@ from flask_session import Session
 import re,random,os,joblib,json
 from flask_bcrypt import Bcrypt
 from flask_mysqldb import MySQL
-from dotenv import load_dotenv
 import MySQLdb.cursors
 from base64 import *
-
-# Load Environment
-load_dotenv()
 
 # Constants
 GREEN = "#67ffa1"
