@@ -919,9 +919,5 @@ def password():
             else:
                 return render_template("result.html",title="The password didn't match.",msg="The new passwords you entered didn't match kindly retry.",color=RED,image=ERROR,rd="home"),404
 
-# Production OK
-@app.route('/healthz')
-def health_check():
-    return "OK", 200
 if __name__ == '__main__':
     app.run(debug=True)
