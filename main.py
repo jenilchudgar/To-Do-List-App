@@ -843,7 +843,7 @@ def change_role(user_id):
         cursor.execute("SELECT * FROM users")
         users = cursor.fetchall()
 
-        return render_template("users.html",users=users)
+        return render_template("users.html",users=users,admin=is_admin())
     
     return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color=RED,image=ERROR,rd="home"),401
 
