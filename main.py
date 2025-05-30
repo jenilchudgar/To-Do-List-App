@@ -704,7 +704,7 @@ def home():
                 new_users.append((u,state))
 
     return render_template("index.html",is_user=is_user,admin=is_admin(),user=user,col_names=col_names,img=base64_img,id=id,last_seen_users=random.sample(
-            list(new_users),k=min(6,len(new_users))
+            list(new_users),k=min(3,len(new_users))
         )
     )
 

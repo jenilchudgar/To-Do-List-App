@@ -87,6 +87,80 @@
     #new_click:hover {
         color: var(--bs-nav-link-hover-color);
     }
+    .user-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+    .user-card-link {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .user-card {
+        background-color: #1e1e2f;
+        border-radius: 16px;
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s ease-in-out;
+        width: 280px;
+    }
+
+    .user-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .user-img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 15px;
+    }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .status {
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+        color: #ccc;
+    }
+
+    .user-name {
+        font-weight: bold;
+        font-size: 1.1rem;
+        color: #fff;
+    }
+
+    .last-seen {
+        font-size: 0.85rem;
+        color: #aaa;
+    }
+
+    .dot {
+        height: 10px;
+        width: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+    }
+
+    .online {
+        background-color: #28a745;
+    }
+
+    .offline {
+        background-color: #dc3545;
+    }
+
 </style>
     
 <img src="/static/images/image1.jpg" class="w-100"
@@ -191,28 +265,27 @@
             </div>
         </div>
 
-        <div class="row">
+        <div class="user-row">
             {% for user in last_seen_users %}
-            <a href="/profile/{{user[0].id}}" style="text-decoration: none; color: inherit;">
-                <div class="col-md-4">
-                    <div class="user-card d-flex align-items-center">
-                        <img src="data:image/jpeg;base64,{{ user[0].profile_picture }}" class="rounded-circle me-3"
-                            width="60" height="60" alt="User" style="object-fit: cover;">
-                        <div>
+            <a href="/profile/{{ user[0].id }}" class="user-card-link">
+                <div class="user-card">
+                    <img src="data:image/jpeg;base64,{{ user[0].profile_picture }}" class="user-img" alt="User">
+                    <div class="user-info">
+                        <div class="status">
                             {% if user[1] == "Online" %}
-                            <small>🟢 Online</small>
+                            <span class="dot online"></span> Online
                             {% else %}
-                            <small>🔴 Offline</small>
+                            <span class="dot offline"></span> Offline
                             {% endif %}
-
-                            <p class="user-name">{{ user[0].first_name }} {{ user[0].last_name }}</p>
-                            <small class="last-seen">Last seen: {{ user[0].last_seen }}</small>
                         </div>
+                        <div class="user-name">{{ user[0].first_name }} {{ user[0].last_name }}</div>
+                        <div class="last-seen">Last seen: {{ user[0].last_seen }}</div>
                     </div>
                 </div>
             </a>
             {% endfor %}
         </div>
+
     </div>
 </div>
 {% endif %}

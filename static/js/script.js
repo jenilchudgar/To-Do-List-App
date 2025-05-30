@@ -1,3 +1,4 @@
+document.getElementById("input1").focus()
 function handleInput(index) {
     const inputs = document.querySelectorAll('.inputContainer input');
     const current = inputs[index];
