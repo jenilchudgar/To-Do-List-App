@@ -3,9 +3,11 @@ from flask import Flask,request,render_template,abort,jsonify,session
 from datetime import datetime,date as dt, timedelta
 from flask_mail import Mail, Message
 from flask_session import Session
-import re,random,os,joblib,json
+import re,random,os,json,requests
 from flask_bcrypt import Bcrypt
 from flask_mysqldb import MySQL
+from dotenv import load_dotenv
+from time import localtime
 import MySQLdb.cursors
 from base64 import *
 
@@ -19,6 +21,9 @@ ERROR = "error.png"
 app = Flask(__name__)
 app.secret_key = 'SECRET_KEY_2025'
 app.url_map.strict_slashes = False
+
+# Set Up Env. Variables
+load_dotenv() 
 
 # Mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -48,8 +53,99 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"  
 Session(app)
 
-# AI Model 
-model = joblib.load('AI Model//task_time_predictor_model.pkl')
+# Weather API Call Workings
+def get_weather(c:str,cn:str):
+    print(f"COUNTRY: {cn}")
+    latitude, longitude = 40.7128, -74.0060
+    url_geo = "https://geocoding-api.open-meteo.com/v1/search"
+    param = {
+        "name": c,
+    }
+
+    try:
+        response = requests.get(url_geo, params=param, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        results = data.get("results", [])
+    except Exception as e:
+        print("Geo API error:", e)
+        latitude, longitude = 40.7128, -74.0060
+        results = []
+         
+    for res in results:
+        if c.lower() in res["name"].lower() and res["country"].lower() == cn.lower():
+                print("HERE")
+                selected_city = res
+                latitude = selected_city["latitude"]
+                longitude = selected_city["longitude"]
+                break
+    
+    today = dt.today().strftime('%Y-%m-%d')
+
+    # API endpoint
+    url = "https://api.open-meteo.com/v1/forecast"
+    params = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "current": ",".join([
+            "temperature_2m",
+            "apparent_temperature",
+            "rain",
+            "snowfall",
+            "uv_index",
+            "relative_humidity_2m",
+            "wind_speed_10m"
+        ]),
+        "daily": "temperature_2m_max,temperature_2m_min",
+        "timezone": "auto"
+    }
+
+    # Make the request
+    response = requests.get(url, params=params)
+    data = response.json()
+
+    # Extract current weather
+    current = data.get("current", {})
+    daily = data.get("daily", {})
+
+    weather_data = {}
+
+    weather_data['temp'] = current.get('temperature_2m', None)
+    weather_data['feels_like'] = current.get('apparent_temperature', None)
+    weather_data['rain'] = current.get('rain', None)
+    weather_data['snow'] = current.get('snowfall', None)
+    weather_data['uv'] = current.get('uv_index', None)
+    weather_data['humidity'] = current.get('relative_humidity_2m', None)
+    weather_data['wind_speed'] = current.get('wind_speed_10m', None)
+
+    # Extract only today's max/min
+    if "time" in daily and today in daily["time"]:
+        index = daily["time"].index(today)
+        weather_data['max_temp'] = daily['temperature_2m_max'][index]
+        weather_data['min_temp'] = daily['temperature_2m_min'][index]
+    else:
+        weather_data['max_temp'], weather_data['min_temp'] = None,None
+    
+    return weather_data
+
+def update_weather_if_needed(user_data):
+    last_fetch_str = session.get("weather_last_fetched", "")
+    now = datetime.now()
+
+    if last_fetch_str:
+        try:
+            last_fetch = datetime.fromisoformat(last_fetch_str)
+            if now - last_fetch < timedelta(minutes=30):  # only if <30 mins passed
+                print("OLD")
+                return session.get("weather_data", {})
+        except:
+            pass
+
+    weather_data = get_weather(user_data['city'], user_data['country'])
+    session["weather_data"] = weather_data
+    session["weather_last_fetched"] = now.isoformat()
+    print("NEW")
+    return weather_data
 
 # User Model
 class User(UserMixin):
@@ -133,6 +229,12 @@ def login():
                 code = 200
                 user = User(id=acc['id'],username=acc['username'],role=acc['role'])
 
+                user_data = {
+                    "city": acc['city'],
+                    "country": acc['country']
+                }
+                session["weather_data"] = update_weather_if_needed(user_data)
+
                 login_user(user,remember=('check' in request.form))
             else:
                 title = "Login Failed!"
@@ -148,7 +250,7 @@ def login():
             img = ERROR
             color = RED
             code = 400
-        
+    
         return render_template("result.html",title=title,msg=msg,rd=rd,image=img,color=color),code
     return render_template("login.html")
 
@@ -568,35 +670,6 @@ def mark_complete(task_id):
     else:
         abort(401)
 
-## AI Model 
-@app.route('/estimate_time',methods=['GET','POST'])
-def estimate_time():
-    text = request.get_json()
-    task_desc = text.get("task","").strip()
-    if not task_desc:
-        return jsonify({"estimated_time": "--"})
-    
-    estimated = time_predictor([task_desc])[0]
-
-    return jsonify({
-        "estimated_time": f"{estimated} hr(s)" if estimated else "Not predictable"
-    })
-
-def time_predictor(tasks):  
-    vectorizer = joblib.load('AI Model//task_vectorizer.pkl')
-
-    X_new = vectorizer.transform(tasks)
-    predictions = model.predict(X_new)
-
-    caliberated_pred = []
-    for time in predictions:
-        if time < 0 or time == 0:
-            caliberated_pred.append(None)
-            continue
-        caliberated_pred.append(f"{time:.2f}")
-
-    return caliberated_pred
-
 ## Reassigning Tasks
 @app.route('/reassign',methods=['GET','POST'])
 @login_required
@@ -661,6 +734,31 @@ def home():
         
         cursor.execute("SELECT * FROM users WHERE id = %s",(current_user.id,))
         user = cursor.fetchone()
+
+        user_data = {
+            "city": user['city'],
+            "country": user['country']
+        }
+
+        weather_data = update_weather_if_needed(user_data)
+        weather_class = ""
+
+        if 6 <= localtime().tm_hour < 18:
+            # Day
+            if weather_data['snow']:
+                weather_data['icon'] = "snow.png"
+                weather_class = "snowy"
+            elif weather_data['rain']:
+                weather_data['icon'] = "dark-blue"
+                weather_class = "rain"
+            else:
+                weather_data['icon'] = "sun.png"
+                weather_class = "light-blue"
+        else:
+            # Night
+            weather_data['icon'] = "night.png"
+            weather_class = "blackish"
+
         base64_img = b64encode(user['profile_picture']).decode('utf-8')
 
         id = current_user.id
@@ -678,7 +776,7 @@ def home():
                 u['profile_picture'] = b64encode(u['profile_picture']).decode('utf-8')
                 diff = time - u['last_seen']
                 seconds = diff.total_seconds()
-                # Determine human-readable time
+
                 if seconds <= 10:
                     u['last_seen'] = "Just now"
                     state = "Online"
@@ -702,8 +800,11 @@ def home():
                     state = "Offline"
                 
                 new_users.append((u,state))
+    
+    else:
+        weather_data = None
 
-    return render_template("index.html",is_user=is_user,admin=is_admin(),user=user,col_names=col_names,img=base64_img,id=id,last_seen_users=random.sample(
+    return render_template("index.html",is_user=is_user,admin=is_admin(),user=user,col_names=col_names,img=base64_img,id=id,weather_data=weather_data,weather_class=weather_class,today=datetime.today().strftime(r"%B %d, %Y"),last_seen_users=random.sample(
             list(new_users),k=min(3,len(new_users))
         )
     )
@@ -742,9 +843,9 @@ def search():
         tasks = cursor.fetchall()
 
         if is_admin():
-            title = f'Search Results for "{q}" from all users'
+            title = f'Search Results for {by} with "{q}" from all users'
         else:
-            title = f'Search Results for "{q}"'
+            title = f'Search Results for {by} with 25"{q}"'
 
         li,title,status_code = get_tasks(tasks,title)
         

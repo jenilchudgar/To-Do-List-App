@@ -8,10 +8,9 @@
         }
     </style>
     <form method="post" enctype="multipart/form-data">
-        <div class="mb-3 box">
+        <div class="mb-3 box" style="margin-right: 30%;">
             <label for="exampleFormControlTextarea1" class="form-label">Task</label>
-            <textarea class="form-control" name="task" id="task" rows="2"></textarea>
-            <p>(BETA) Estimated Time: <span id="eta">--</span></p>
+            <textarea class="form-control" name="task" id="task" rows="3"></textarea>
         </div>
         
         <div class="mb-3 box">
@@ -52,26 +51,4 @@
         <br>
         <button type="submit" class="btn btn-warning box">Submit</button>
     </form>
-    <script>
-    let timeout = null;
-
-    document.getElementById("task").addEventListener("input", function () {
-    clearTimeout(timeout);
-    const inputText = this.value;
-
-    timeout = setTimeout(() => {
-        fetch("/estimate_time", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ task: inputText }),
-        })
-        .then((res) => res.json())
-        .then((data) => {
-            document.getElementById("eta").innerText = data.estimated_time;
-        });
-    }, 500); 
-    });
-    </script>
 {% endblock %}

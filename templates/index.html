@@ -2,8 +2,21 @@
 
 {% block content %}
 <style>
+    #cont1 {
+        display: flex;
+        justify-content: right;
+        width: 80%;
+    }
+
+    #cont2 {
+        display: flex;
+        justify-content: left;
+        width: 80%;
+    }
+
     .big-box {
-        margin-top: 7%;
+        margin-top: 0%;
+        width: 80%;
     }
 
     .container-fluid {
@@ -87,13 +100,14 @@
     #new_click:hover {
         color: var(--bs-nav-link-hover-color);
     }
+
     .user-row {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
-    margin-top: 20px;
-}
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
 
     .user-card-link {
         text-decoration: none;
@@ -161,8 +175,104 @@
         background-color: #dc3545;
     }
 
+    .big-cont {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .light-blue {
+        background: linear-gradient(to bottom right,
+                rgba(249, 255, 130, 0.895),
+                rgb(172, 247, 255));
+        backdrop-filter: blur(8px) saturate(180%);
+        -webkit-backdrop-filter: blur(8px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        color: #080066;
+    }
+
+    .dark-blue {
+        background: linear-gradient(to bottom right,
+                rgba(30, 0, 150, 0.437),
+                rgb(20, 40, 60));
+        backdrop-filter: blur(14px) brightness(0.9);
+        -webkit-backdrop-filter: blur(14px) brightness(0.9);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        box-shadow: 0 4px 40px rgba(0, 0, 0, 0.6);
+        color: #E0F0FF;
+    }
+
+    .blackish {
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
+        color: white;
+    }
+
+    .snowy {
+        background: linear-gradient(to bottom left,
+                rgb(190, 246, 255),
+                white);
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        color: #003366;
+    }
+
+    .weather-card {
+        width: 250px;
+        border-radius: 12px;
+        padding: 16px;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .weather-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .main-icon {
+        width: 48px;
+        height: 48px;
+        opacity: 0.85;
+    }
+
+    .temp {
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .weather-details {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .detail {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .detail img {
+        width: 20px;
+        height: 20px;
+    }
+    #t{
+        font-family: "Cabin Sketch", sans-serif;
+        font-size: 22px;
+    }
 </style>
-    
+
 <img src="/static/images/image1.jpg" class="w-100"
     style="height: 100vh; width: 100%; object-fit: cover; user-select: none; pointer-events: none; position: absolute; top: 0; left: 0; z-index: -1; opacity: 0.8;"
     alt="">
@@ -170,7 +280,7 @@
 <div style="position: relative; z-index: 1;">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <a class="navbar-brand" href="/" style="margin-left: 10px;">Home</a>
@@ -182,35 +292,35 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
                 {% if not is_user %}
-                    <li class="nav-item active">
-                        <a class="nav-link" href="/login">Login</a>
-                    </li>
-                    <li class="nav-item active">
-                        <a class="nav-link" href="/register">Register</a>
-                    </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="/login">Login</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="/register">Register</a>
+                </li>
                 {% endif %}
 
                 {% if is_user %}
-                    <li class="nav-item active">
-                        <a class="nav-link" href="/logout">Logout</a>
-                    </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="/logout">Logout</a>
+                </li>
 
-                    <li class="nav-item dropdown" >
-                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false" style="color: var(--bs-nav-link-color);" id="new_click">
-                            Tasks
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/tasks">View All Tasks</a></li>
-                            <li><a class="dropdown-item" href="/add_task">Add Task</a></li>
-                        </ul>
-                    </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false" style="color: var(--bs-nav-link-color);" id="new_click">
+                        Tasks
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/tasks">View All Tasks</a></li>
+                        <li><a class="dropdown-item" href="/add_task">Add Task</a></li>
+                    </ul>
+                </li>
                 {% endif %}
 
                 {% if admin %}
-                    <li class="nav-item active">
-                        <a class="nav-link" href="/users">View Users</a>
-                    </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="/users">View Users</a>
+                </li>
                 {% endif %}
         </div>
         {% if is_user %}
@@ -257,36 +367,100 @@
 </div>
 
 {% if is_user %}
-<div class="big-box">
-    <div class="container-fluid py-5">
-        <div class="row mb-4">
-            <div class="col-12">
-                <h1 class="dashboard-title">Last Seen Users</h1>
-            </div>
-        </div>
-
-        <div class="user-row">
-            {% for user in last_seen_users %}
-            <a href="/profile/{{ user[0].id }}" class="user-card-link">
-                <div class="user-card">
-                    <img src="data:image/jpeg;base64,{{ user[0].profile_picture }}" class="user-img" alt="User">
-                    <div class="user-info">
-                        <div class="status">
-                            {% if user[1] == "Online" %}
-                            <span class="dot online"></span> Online
-                            {% else %}
-                            <span class="dot offline"></span> Offline
-                            {% endif %}
-                        </div>
-                        <div class="user-name">{{ user[0].first_name }} {{ user[0].last_name }}</div>
-                        <div class="last-seen">Last seen: {{ user[0].last_seen }}</div>
+<div class="big-cont" style="user-select: none; pointer-events: none;">
+    <div id="cont1">
+        <div class="big-box">
+            <div class="container-fluid py-5" style="margin-bottom: 0 !important;">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h1 style="font-size: 2rem; font-weight: bold; text-align: center;">Weather Update</h1>
                     </div>
                 </div>
-            </a>
-            {% endfor %}
-        </div>
 
+                <div class="text">
+                    <p style="display: flex; justify-content: space-between;" id="t">
+                        <span>📅 {{today}}</span>
+                        <span>🏙️ {{user.city}}, {{user.country}}</span>
+                    </p>
+
+                </div>
+
+                <div class="c" style="display: flex; justify-content: center;">
+                    <div class="weather-card light-blue">
+                        <div class="weather-header">
+                            <img src="{{ url_for('static', filename='images/weather/' + weather_data['icon']) }}"
+                                alt="Main Weather Icon" class="main-icon">
+                            <div class="temp">{{ weather_data['temp'] }}°C</div>
+                        </div>
+
+                        <div class="weather-details">
+                            <div class="detail">
+                                <img src="{{ url_for('static', filename='images/weather/max_temp.png') }}"
+                                    alt="Max Temp">
+                                <span>{{ weather_data['max_temp'] }}°C</span>
+                            </div>
+                            <div class="detail">
+                                <img src="{{ url_for('static', filename='images/weather/min_temp.png') }}"
+                                    alt="Min Temp">
+                                <span>{{ weather_data['min_temp'] }}°C</span>
+                            </div>
+                            <div class="detail">
+                                <img src="{{ url_for('static', filename='images/weather/feels_like.png') }}"
+                                    alt="Feels Like">
+                                <span>{{ weather_data['feels_like'] }}°C</span>
+                            </div>
+                            <div class="detail">
+                                <img src="{{ url_for('static', filename='images/weather/humidity.png') }}"
+                                    alt="Humidity">
+                                <span>{{ weather_data['humidity'] }}%</span>
+                            </div>
+                            <div class="detail">
+                                <img src="{{ url_for('static', filename='images/weather/wind.png') }}" alt="Wind Speed">
+                                <span>{{ weather_data['wind_speed'] }} km/h</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="cont2">
+        <div class="big-box">
+            <div class="container-fluid py-5">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h1 class="dashboard-title">Last Seen Users</h1>
+                    </div>
+                </div>
+
+                <div class="user-row">
+                    {% for user in last_seen_users %}
+                    <a href="/profile/{{ user[0].id }}" class="user-card-link">
+                        <div class="user-card">
+                            <img src="data:image/jpeg;base64,{{ user[0].profile_picture }}" class="user-img" alt="User">
+                            <div class="user-info">
+                                <div class="status">
+                                    {% if user[1] == "Online" %}
+                                    <span class="dot online"></span> Online
+                                    {% else %}
+                                    <span class="dot offline"></span> Offline
+                                    {% endif %}
+                                </div>
+                                <div class="user-name">{{ user[0].first_name }} {{ user[0].last_name }}</div>
+                                <div class="last-seen">Last seen: {{ user[0].last_seen }}</div>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cabin+Sketch:wght@400;700&family=IM+Fell+DW+Pica:ital@0;1&family=Press+Start+2P&display=swap" rel="stylesheet">
 {% endif %}
 {% endblock %}
