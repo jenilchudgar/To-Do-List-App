@@ -78,6 +78,7 @@
     .hover-effect:hover {
         transform: translateY(-3px) scale(1.05) rotate(1deg);
         filter: contrast(120%) brightness(1.1);
+        border: none;
         box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
     }
 
@@ -325,7 +326,7 @@
         </div>
         {% if is_user %}
         {{ csrf_input }}
-        <form class="d-flex" method="POST" style="margin-right: 10px;" action="{{url_for('search')}}">
+        <form class="d-flex" method="POST" style="margin-right: 10px;" action="{{url_for('users.search')}}">
 
             <span
                 style="color: white;margin: 0; white-space: nowrap; display: flex; align-items: center; margin-right: 10px;">Filter
@@ -346,16 +347,16 @@
             <button data-bs-toggle="dropdown" aria-expanded="false" style="background: none; border: none;">
                 <div class="navbar-logo">
                     <img src="data:image/jpeg;base64,{{ img }}" alt="Profile Picture" width="40" height="40"
-                        class="hover-effect">
+                        class="hover-effect" >
                 </div>
             </button>
             <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{url_for('profile',user_id=id)}}">View Profile</a></li>
-                <li><a class="dropdown-item" href="{{url_for('update_user',user_id=id)}}">Update Profile</a></li>
+                <li><a class="dropdown-item" href="{{url_for('users.profile',user_id=id)}}">View Profile</a></li>
+                <li><a class="dropdown-item" href="{{url_for('users.update_user',user_id=id)}}">Update Profile</a></li>
                 <li>
                     <hr class="dropdown-divider">
                 </li>
-                <li><a class="dropdown-item" href="{{url_for('change_password',user_id=id)}}">Change Password</a></li>
+                <li><a class="dropdown-item" href="{{url_for('users.change_password',user_id=id)}}">Change Password</a></li>
             </ul>
         </div>
         {% endif %}

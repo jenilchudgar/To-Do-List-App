@@ -21,17 +21,17 @@
                         <td>{{ user.username }}</td>
                         <td>{{ user.role }}</td>
                         <td>
-                            <form method="post" action="{{ url_for('change_role', user_id=user.id) }}" style="display:inline;">
+                            <form method="post" action="{{ url_for('users.change_role', user_id=user.id) }}" style="display:inline;">
                                 <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('Are you sure you want to the role of this user')">
                                     Change Role
                                 </button>
                             </form>
 
-                            <a type="submit" href="{{ url_for('delete_user',user_id=user.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this user')" style="margin: 5px 15px;">
+                            <a type="submit" href="{{ url_for('users.delete_user',user_id=user.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this user')" style="margin: 5px 15px;">
                                     Delete
                             </a>
 
-                            <a type="submit" href="{{ url_for('view_user_tasks',user_id=user.id) }}" class="btn btn-info btn-sm">
+                            <a type="submit" href="{{ url_for('tasks.view_user_tasks',user_id=user.id) }}" class="btn btn-info btn-sm">
                                     View Tasks
                             </a>
                         </td>

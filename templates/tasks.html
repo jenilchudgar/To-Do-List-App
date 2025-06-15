@@ -92,20 +92,20 @@
                             <div class="d-flex flex-wrap gap-2" style="display: flex;">
 
                                 {% if current_user.id == data[3].id or current_user.role == "admin" %}
-                                    <form method="post" action="{{ url_for('delete_task', task_id=data[1].id) }}" class="m-0 p-0">
+                                    <form method="post" action="{{ url_for('tasks.delete_task', task_id=data[1].id) }}" class="m-0 p-0">
                                         <button type="submit" class="btn btn-outline-danger btn-sm"
                                             onclick="return confirm('Are you sure you want to delete this task?')">
                                             <i class="bi bi-trash"></i> Delete
                                         </button>
                                     </form>
 
-                                    <a href="{{ url_for('update_task', task_id=data[1].id) }}" class="btn btn-outline-warning btn-sm">
+                                    <a href="{{ url_for('tasks.update_task', task_id=data[1].id) }}" class="btn btn-outline-warning btn-sm">
                                         <i class="bi bi-pencil-square"></i> Update
                                     </a>
                                 {% endif %}
 
                                 {% if data[1].status == "Pending" %}
-                                    <a href="{{ url_for('mark_complete', task_id=data[1].id) }}"
+                                    <a href="{{ url_for('tasks.mark_complete', task_id=data[1].id) }}"
                                         class="btn btn-outline-info btn-sm"
                                         onclick="return confirm('Are you sure you want to mark this task complete?')">
                                         <i class="bi bi-check-circle"></i> Mark Complete
@@ -113,7 +113,7 @@
                                 {% endif %}
 
                                 {% if current_user.role == "admin" %}
-                                    <a href="{{ url_for('reassign_task', task_id=data[1].id) }}"
+                                    <a href="{{ url_for('tasks.reassign_task', task_id=data[1].id) }}"
                                         class="btn btn-outline-dark btn-sm">
                                         <i class="bi bi-arrow-repeat"></i> Reassign
                                     </a>
@@ -129,7 +129,7 @@
     </div>
 
     <div class="text-start mt-3">
-        <a href="{{ url_for('add_task') }}" class="btn btn-success">
+        <a href="{{ url_for('tasks.add_task') }}" class="btn btn-success">
             Add Task
         </a>
     </div>

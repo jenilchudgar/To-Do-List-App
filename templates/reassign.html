@@ -4,7 +4,7 @@
     {% if current_user.role == "admin" %}
         <div class="container">
             <h2>{{title}}</h2>
-            <form action="{{url_for('reassign')}}" method="post">
+            <form action="{{url_for('tasks.reassign')}}" method="post">
                 <input type="hidden" name="task_id" value="{{task_id}}">
                 <select class="form-select box" aria-label="Default select example" style="display: block; width: 200px; margin-top: 10px;" name="userid" >
                     <option selected>Users</option>
