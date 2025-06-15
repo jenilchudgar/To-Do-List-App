@@ -447,6 +447,8 @@ def order(sort_by):
         "status":"status = 'Pending' DESC, id ASC",
         "start_date":"start_date ASC",
         "end_date":"end_date ASC",
+        "Creation_DT":"currentdt ASC",
+        "priority": "FIELD(priority, 'Urgent', 'Important', 'Least Important') ASC"
     }
 
     query = """
@@ -461,7 +463,7 @@ def order(sort_by):
         query += "WHERE user_id = %s"
         params.append(current_user.id)
 
-    query += f" ORDER BY {valid_sorts.get(sort_by)}"
+    query += f" ORDER BY {valid_sorts.get(sort_by).replace("_"," ")}"
     
     cursor.execute(query,params)
     tasks = cursor.fetchall()
@@ -509,8 +511,10 @@ def get_tasks(tasks,title):
             date_list = []
             cursor.execute("SELECT * FROM users WHERE id = %s",(current_user.id,))
             user = cursor.fetchone()
+
             for task,img,assigned in zip(tasks,base64_images,assigned_by_list):
                 date_list = str(task['start_date']).split("-")
+
                 if task['status'] == "Pending" and int(date_list[0]) == now.year and int(date_list[1]) == now.month and int(date_list[2]) <= now.day:
                     l.append((f"{user['first_name']} {user['last_name']}",task,img,assigned))
 
@@ -718,6 +722,7 @@ def home():
     user = current_user
     users = []
     new_users = []
+    weather_class = ""
     state = ""
     if is_user:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)

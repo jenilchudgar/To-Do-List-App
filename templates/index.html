@@ -386,24 +386,19 @@
                 </div>
 
                 <div class="c" style="display: flex; justify-content: center;">
-                    <div class="weather-card light-blue">
-                        <div class="weather-header">
+                    <div class="weather-card {{weather_class}}">
+                        <div class="weather-header" style="margin-bottom: 0 !important;">
                             <img src="{{ url_for('static', filename='images/weather/' + weather_data['icon']) }}"
                                 alt="Main Weather Icon" class="main-icon">
                             <div class="temp">{{ weather_data['temp'] }}°C</div>
                         </div>
+                        
+                        <div class="detail" style="display: flex; align-items: center; justify-content: right;">
+                            <img src="{{ url_for('static', filename='images/weather/temp.png') }}" alt="Max-Min Temp">
+                            <span>{{ weather_data['max_temp'] }}°C / {{ weather_data['min_temp'] }}°C</span>
+                        </div>
 
                         <div class="weather-details">
-                            <div class="detail">
-                                <img src="{{ url_for('static', filename='images/weather/max_temp.png') }}"
-                                    alt="Max Temp">
-                                <span>{{ weather_data['max_temp'] }}°C</span>
-                            </div>
-                            <div class="detail">
-                                <img src="{{ url_for('static', filename='images/weather/min_temp.png') }}"
-                                    alt="Min Temp">
-                                <span>{{ weather_data['min_temp'] }}°C</span>
-                            </div>
                             <div class="detail">
                                 <img src="{{ url_for('static', filename='images/weather/feels_like.png') }}"
                                     alt="Feels Like">
@@ -417,6 +412,10 @@
                             <div class="detail">
                                 <img src="{{ url_for('static', filename='images/weather/wind.png') }}" alt="Wind Speed">
                                 <span>{{ weather_data['wind_speed'] }} km/h</span>
+                            </div>
+                            <div class="detail">
+                                <img src="{{ url_for('static', filename='images/weather/uv.png') }}" alt="UV">
+                                <span>{{ weather_data['uv'] }}</span>
                             </div>
                         </div>
                     </div>
