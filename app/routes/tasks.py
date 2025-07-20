@@ -128,16 +128,15 @@ def get_tasks(tasks,title):
                 else:
                     l.append(("Deleted User",task,img,assigned))
         else:
-            now = datetime.now()
-            date_list = []
+            now = datetime.now().date()
             cursor.execute("SELECT * FROM users WHERE id = %s",(current_user.id,))
             user = cursor.fetchone()
 
             for task,img,assigned in zip(tasks,base64_images,assigned_by_list):
-                date_list = str(task['start_date']).split("-")
+                task_start = task['start_date']
 
-                if task['status'] == "Pending" and int(date_list[0]) == now.year and int(date_list[1]) == now.month and int(date_list[2]) <= now.day:
-                    l.append((f"{user['first_name']} {user['last_name']}",task,img,assigned))
+                if task['status'] == "Pending" and task_start <= now:
+                    l.append((f"{user['first_name']} {user['last_name']}", task, img, assigned))
 
         status_code = 200
         if not l:
@@ -298,24 +297,25 @@ def mark_complete(task_id):
 @bp.route('/task/<int:task_id>')
 @login_required
 def view_task(task_id):
+    
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM tasks WHERE id=%s",(task_id,))
     task = cursor.fetchone()
+    if current_user.role == "admin" or task['id'] == current_user.id:
+        cursor.execute("SELECT first_name,last_name FROM users WHERE id=%s",(task['assigned_by'],))
+        assigned_by = cursor.fetchone()
 
-    cursor.execute("SELECT first_name,last_name FROM users WHERE id=%s",(task['assigned_by'],))
-    assigned_by = cursor.fetchone()
-    print(assigned_by)
+        cursor.execute("SELECT first_name,last_name FROM users WHERE id=%s",(task['user_id'],))
+        assigned_to = cursor.fetchone()
 
-    cursor.execute("SELECT first_name,last_name FROM users WHERE id=%s",(task['user_id'],))
-    assigned_to = cursor.fetchone()
-    print(assigned_to)
-
-    if task and task['image']:
-        task['image'] = b64encode(task['image']).decode('utf-8')
-    else:
-        task['image'] = ""
-        
-    return render_template("view_task.html",title=f"Task {task_id}",task=task,assigned_by=assigned_by,assigned_to=assigned_to)
+        if task and task['image']:
+            task['image'] = b64encode(task['image']).decode('utf-8')
+        else:
+            task['image'] = ""
+            
+        return render_template("view_task.html",title=f"Task {task_id}",task=task,assigned_by=assigned_by,assigned_to=assigned_to)
+    
+    return abort(401)
 
 ## Reassigning Tasks
 @bp.route('/reassign',methods=['GET','POST'])
@@ -353,3 +353,34 @@ def reassign_task(task_id):
     cursor.execute("SELECT * FROM users")
     users = cursor.fetchall()
     return render_template("reassign.html",title="Select the user who you want to reassign the task to",users=users,task_id=task_id)
+
+# Progress 
+@bp.route('/progress')
+@login_required
+def progress():
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT * FROM users")
+    all_users = cursor.fetchall()
+
+    for user in all_users:
+        cursor.execute("SELECT status from tasks WHERE user_id = %s",(user['id'],))
+        status = cursor.fetchall()
+        c = 0
+        for s in status:
+            if s['status'] == "Complete": c+=1
+        if len(status) == 0:
+            percent = 0
+        else:
+            percent = c/len(status)*100
+            
+        user['percentage'] = str(round(percent,3))
+        if percent in range(80,101):
+            user['bg'] = "success"
+        elif percent in range(50,81):
+            user['bg'] = "info"
+        elif percent in range(30,51):
+            user['bg'] = "warning"
+        else:
+            user['bg'] = "danger"
+
+    return render_template("progress.html",users=all_users,title="Tasks Progress for All Users")

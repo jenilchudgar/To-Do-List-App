@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {% if current_user.role == "admin" %}
+        <style>
+            .c{
+                margin: 15px;
+            }
+        </style>
+        <div class="c">
+            <h2>{{title}}</h2>
+            <hr>
+            {% for user in users %}
+                <p style="margin: 0;">{{user.first_name}} {{user.last_name}}</p>
+                <div class="progress" role="progressbar" aria-label="Default striped example" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100">
+                    {% if user.percentage == "0" %}
+                        <div class="progress-bar progress-bar-striped bg-{{user.bg}}" style="width: 2%;"><strong>0%</strong></div>
+                    {% else %}
+                    <div class="progress-bar progress-bar-striped bg-{{user.bg}}" style="width: {{user.percentage}}%;"><strong>{{user.percentage}}%</strong></div>
+                    {% endif %}
+                </div>
+                <br>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}
