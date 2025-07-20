@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .c {
+        margin: 15px;
+    }
+</style>
+
+<div class="c">
+    <h2>{{title}}</h2>
+    <hr>
+    <div id="details">
+        <p><strong>Assigned By: </strong>{{assigned_by['first_name']}} {{assigned_by['last_name']}}</p>
+        <p><strong>Assigned To: </strong>{{assigned_to['first_name']}} {{assigned_to['last_name']}}</p>
+        <p><strong>Start Date:</strong> {{task.start_date}}</p>
+        <p><strong>End Date:</strong> {{task.end_date}}</p>
+        {% if current_user.role == "admin" %}
+            <p><strong>Creation Date Time:</strong> {{task.currentdt}}</p>
+        {% endif %}
+        <p><strong>Description:</strong><br>{{task.task}}</p>
+        
+        <div style="display: flex; justify-content: center; ">
+            <img src="data:image/jpeg;base64,{{ task.image }}" alt="No Image Uploaded">
+        </div>
+    </div>
+    
+    <br>
+
+    {% if task.status == "Complete" %}
+        <p style="background-color: #9efc68;"><strong>Status: </strong>{{task.status}}</p>
+    {% else %}
+        <p style="background-color: #ffff7f;"><strong>Status: </strong>{{task.status}}</p>
+    {% endif %}
+
+    {% if task.priority == "Urgent" %}
+        <p style="background-color: #F7A8A8;"><strong>Priority: </strong>{{ task.priority }}</p>
+    {% elif task.priority == "Important" %}
+        <p style="background-color: #FFF6A3;"><strong>Priority: </strong>{{ task.priority }}</p>
+    {% elif task.priority == "Least Important" %}
+        <p style="background-color: #A8E6CF;"><strong>Priority: </strong>{{ task.priority }}</p>
+    {% endif %}
+
+    <hr>
+
+    <h4>Actions</h4>
+    <div class="d-flex flex-wrap gap-2" style="display: flex;">
+
+        {% if current_user.id == task.id or current_user.role == "admin" %}
+            <form method="post" action="{{ url_for('tasks.delete_task', task_id=task.id) }}" class="m-0 p-0">
+                <button type="submit" class="btn btn-outline-danger btn-sm"
+                    onclick="return confirm('Are you sure you want to delete this task?')">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </form>
+
+            <a href="{{ url_for('tasks.update_task', task_id=task.id) }}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-pencil-square"></i> Update
+            </a>
+            {% endif %}
+
+            {% if task.status == "Pending" %}
+            <a href="{{ url_for('tasks.mark_complete', task_id=task.id) }}" class="btn btn-outline-info btn-sm"
+                onclick="return confirm('Are you sure you want to mark this task complete?')">
+                <i class="bi bi-check-circle"></i> Mark Complete
+            </a>
+            {% endif %}
+
+            {% if current_user.role == "admin" %}
+            <a href="{{ url_for('tasks.reassign_task', task_id=task.id) }}" class="btn btn-outline-dark btn-sm">
+                <i class="bi bi-arrow-repeat"></i> Reassign
+            </a>
+        {% endif %}
+
+    </div>
+</div>
+
+<br>
+
+{% endblock %}

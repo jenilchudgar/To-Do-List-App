@@ -69,8 +69,7 @@ def order(sort_by):
         "status":"status = 'Pending' DESC, id ASC",
         "start_date":"start_date ASC",
         "end_date":"end_date ASC",
-        "Creation_DT":"currentdt ASC",
-        "priority": "FIELD(priority, 'Urgent', 'Important', 'Least Important') ASC"
+        "priority": "FIELD(priority, 'Urgent', 'Important', 'Least Important') ASC",
     }
 
     query = """
@@ -85,7 +84,7 @@ def order(sort_by):
         query += "WHERE user_id = %s"
         params.append(current_user.id)
 
-    query += f" ORDER BY {valid_sorts.get(sort_by).replace("_"," ")}"
+    query += f" ORDER BY {valid_sorts.get(sort_by)}"
     
     cursor.execute(query,params)
     tasks = cursor.fetchall()
@@ -295,6 +294,28 @@ def mark_complete(task_id):
             abort(404)
     else:
         abort(401)
+
+@bp.route('/task/<int:task_id>')
+@login_required
+def view_task(task_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT * FROM tasks WHERE id=%s",(task_id,))
+    task = cursor.fetchone()
+
+    cursor.execute("SELECT first_name,last_name FROM users WHERE id=%s",(task['assigned_by'],))
+    assigned_by = cursor.fetchone()
+    print(assigned_by)
+
+    cursor.execute("SELECT first_name,last_name FROM users WHERE id=%s",(task['user_id'],))
+    assigned_to = cursor.fetchone()
+    print(assigned_to)
+
+    if task and task['image']:
+        task['image'] = b64encode(task['image']).decode('utf-8')
+    else:
+        task['image'] = ""
+        
+    return render_template("view_task.html",title=f"Task {task_id}",task=task,assigned_by=assigned_by,assigned_to=assigned_to)
 
 ## Reassigning Tasks
 @bp.route('/reassign',methods=['GET','POST'])

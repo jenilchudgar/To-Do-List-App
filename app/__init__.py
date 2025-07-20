@@ -16,6 +16,7 @@ sess = Session()
 def create_app():
     app = Flask(__name__)
     app = Flask(__name__, template_folder="../templates",static_folder='../static')
+    app.url_map.strict_slashes = False
 
     app.config.from_mapping(
         SECRET_KEY='SECRET_KEY_2025',

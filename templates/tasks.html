@@ -34,11 +34,6 @@
                     <th scope="col">
                         <a href="/tasks?sort_by=end_date">End Date</a>
                     </th>
-                    {% if current_user.role == "admin" %}
-                    <th scope="col">
-                        <a href="/tasks?sort_by=Creation_DT">Creation DT</a>
-                    </th>
-                    {% endif %}
                     <th scope="col">
                         <a href="/tasks?sort_by=priority">Priority</a>
                     </th>
@@ -46,7 +41,6 @@
                     <th scope="col">
                         <a href="/tasks/?sort_by=status">Status</a>
                     </th>
-                    <th scope="col">Image</th>
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
@@ -54,13 +48,10 @@
                 {% for data in full_list %}
                     <tr>
                         <td>{{ data[1].id }}</td> <!-- ID -->
-                        <td>{{ data[0] }}</td> <!-- Assigned To (user) -->
+                        <td>{{ data[0] }} </td> <!-- Assigned To (user) -->
                         <td >{{ data[3].first_name }} {{ data[3].last_name }}</td> <!-- Assigned By -->
                         <td>{{ data[1].start_date }}</td> <!-- Start Date -->
                         <td>{{ data[1].end_date }}</td> <!-- End Date -->
-                        {% if current_user.role == "admin" %}
-                            <td>{{ data[1].currentdt }}</td> 
-                        {% endif %}
                         
                         {% if data[1].priority == "Urgent" %}
                             <td style="background-color: #F7A8A8;">{{ data[1].priority }}</td>
@@ -71,9 +62,9 @@
                         {% endif %}
                         
                         {% if data[1].task|length >=100 %}
-                            <td>{{ data[1].task[:100].rsplit(' ',1)[0]}} ...</td> <!-- Descr. -->
+                            <td onclick="window.location.href='task/{{data[1].id}}'" style="cursor: pointer;">{{ data[1].task[:100].rsplit(' ',1)[0]}} ...</td> <!-- Descr. -->
                         {% else %}
-                            <td>{{ data[1].task}}</td> <!-- Descr. -->
+                            <td onclick="window.location.href='task/{{data[1].id}}'" style="cursor: pointer;">{{ data[1].task}}</td> <!-- Descr. -->
                         {% endif %}
 
                             {% if data[1].status == "Pending" %}
@@ -81,13 +72,6 @@
                             {% else %}
                                 <td style="background-color: #9efc68;">{{ data[1].status }}</td> <!-- Status Pending -->
                             {% endif %}
-                        <td>
-                            {% if data[2] %}
-                                <img src="data:image/jpeg;base64,{{ data[2] }}" width="100">
-                            {% else %}
-                                No Image Inserted
-                           {% endif %}
-                        </td>  
                         <td>
                             <div class="d-flex flex-wrap gap-2" style="display: flex;">
 
@@ -121,7 +105,6 @@
 
                             </div>
                         </td>
-
                     </tr>
                 {% endfor %}
             </tbody>
