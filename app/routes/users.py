@@ -1,5 +1,5 @@
+from flask import request,render_template,abort,session,Blueprint,send_file
 from flask_login import login_required,current_user
-from flask import request,render_template,abort,session,Blueprint
 from datetime import datetime
 from flask_mail import Message
 import random,json
@@ -11,8 +11,13 @@ from app import mysql,mail
 from base64 import *
 import bcrypt
 from app.routes.tasks import get_tasks
+import io
+import matplotlib
+import matplotlib.pyplot as plt
+
 
 bp = Blueprint('users', __name__)
+matplotlib.use("Agg")
 
 # Index Page (Home)
 @bp.route('/',methods=['GET'])
@@ -174,7 +179,7 @@ def view_users():
         users = cursor.fetchall()
         return render_template("users.html",admin=is_admin(),users=users),200
     else:
-        return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color=RED,image=ERROR,rd="home"),401
+        return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color=RED,image=ERROR,rd="users.home"),401
 
 @bp.route('/update_user/<int:user_id>',methods=['GET',"POST"])
 @login_required
@@ -210,7 +215,7 @@ def update_user(user_id):
             cursor.execute("UPDATE users SET first_name = %s, last_name = %s, username = %s, email = %s, city = %s, state = %s, country = %s, zip = %s, updated_on = %s WHERE id = %s",(first_name,last_name,username,email,city,state,country,zip,updated_on,current_user.id))
 
         mysql.connection.commit()
-        return render_template("result.html", title="Profile Updated!", msg="Your profile has been successfully updated.", color=GREEN, image=OK, rd="home")
+        return render_template("result.html", title="Profile Updated!", msg="Your profile has been successfully updated.", color=GREEN, image=OK, rd="users.home")
 
 
     return render_template("register.html",user=user,title="Update your Profile",path=f"/update_user/{user_id}",btn="Update")
@@ -230,7 +235,7 @@ def delete_user(user_id):
 
         return render_template("users.html",users=users)
 
-    return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color=RED,image=ERROR,rd="home"),401
+    return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color=RED,image=ERROR,rd="users.home"),401
 
 @bp.route('/change_role/<int:user_id>',methods=['GET','POST'])
 @login_required
@@ -254,7 +259,7 @@ def change_role(user_id):
 
         return render_template("users.html",users=users,admin=is_admin())
     
-    return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color=RED,image=ERROR,rd="home"),401
+    return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color=RED,image=ERROR,rd="users.home"),401
 
 @bp.route('/profile/<int:user_id>')
 @login_required
@@ -307,7 +312,7 @@ def password():
     password2 = session['password2']
     old_pass = session['old_pass']
     if password1 == old_pass or password2 == old_pass:
-        return render_template("result.html",title="Same Passwords!",msg="The new and old passwords were same. Kindly retry.",color=RED,image=ERROR,rd="home"),404
+        return render_template("result.html",title="Same Passwords!",msg="The new and old passwords were same. Kindly retry.",color=RED,image=ERROR,rd="users.home"),404
     
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM users WHERE id = %s",(user_id,))
@@ -323,7 +328,58 @@ def password():
                 hashed_pass = bcrypt.generate_password_hash(password1).decode('utf-8')
                 cursor.execute("UPDATE users SET password = %s WHERE id = %s",(hashed_pass,user_id))
                 mysql.connection.commit()
-                return render_template("result.html",title="Password Changed Successfully!",msg="Your password has now been updated. Kindly login again to continue for work.",color=GREEN,image=OK,rd="login"),200
+                return render_template("result.html",title="Password Changed Successfully!",msg="Your password has now been updated. Kindly login again to continue for work.",color=GREEN,image=OK,rd="users.login"),200
             
             else:
-                return render_template("result.html",title="The password didn't match.",msg="The new passwords you entered didn't match kindly retry.",color=RED,image=ERROR,rd="home"),404
+                return render_template("result.html",title="The password didn't match.",msg="The new passwords you entered didn't match kindly retry.",color=RED,image=ERROR,rd="users.home"),404
+
+@bp.route('/downloads',methods=['GET','POST'])
+@login_required
+def downloads():
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    if request.method == "POST":
+        option = int(request.form.get("option"))
+        if option in (2,4) and current_user.role != "admin":
+            abort(401)
+
+        match option:
+            case 1:
+                # Download JSON - Tasks for a User
+                cursor.execute("SELECT * FROM tasks WHERE user_id = %s",(current_user.id,))
+                tasks = cursor.fetchall()
+                for task in tasks:
+                    task.pop('image', None)  
+
+                json_data = json.dumps(tasks, indent=4, default=str)  
+                buffer = io.BytesIO()
+                buffer.write(json_data.encode('utf-8'))
+                buffer.seek(0)
+
+                return send_file(
+                    buffer,
+                    mimetype='application/json',
+                    as_attachment=True,
+                    download_name=f'tasks-user-{current_user.id}.json'
+                )
+
+            case 2:
+                cursor.execute("SELECT * FROM tasks")
+                tasks = cursor.fetchall()
+                for task in tasks:
+                    task.pop('image', None)  
+
+                json_data = json.dumps(tasks, indent=4, default=str)  
+                buffer = io.BytesIO()
+                buffer.write(json_data.encode('utf-8'))
+                buffer.seek(0)
+
+                return send_file(
+                    buffer,
+                    mimetype='application/json',
+                    as_attachment=True,
+                    download_name='all_tasks.json'
+                )
+    else:
+        cursor.execute("SELECT * FROM users WHERE id = %s",(current_user.id,))
+        return render_template("downloads.html",user=cursor.fetchone()['username'])

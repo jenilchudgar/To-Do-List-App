@@ -20,26 +20,26 @@
             <thead class="table-dark">
                 <tr>
                     <th scope="col">
-                        <a href="/tasks?sort_by=id">#</a>
+                        <a href="{{ url_for('tasks.view_user_tasks', user_id=user.id, sort_by='id') }}">#</a>
                     </th>
                     <th scope="col">
-                        <a href="/tasks?sort_by=assigned_to">Assigned To</a>
+                        <a href="{{ url_for('tasks.view_user_tasks', user_id=user.id, sort_by='assigned_to') }}">Assigned To</a>
                     </th>
                     <th scope="col">
-                        <a href="/tasks?sort_by=assigned_by">Assigned By</a>
+                        <a href="{{ url_for('tasks.view_user_tasks', user_id=user.id, sort_by='assigned_by') }}">Assigned To</a>
                     </th>
                     <th scope="col">
-                        <a href="/tasks?sort_by=start_date">Start Date</a>
+                        <a href="{{ url_for('tasks.view_user_tasks', user_id=user.id, sort_by='start_date') }}">Start Date</a>
                     </th>
                     <th scope="col">
-                        <a href="/tasks?sort_by=end_date">End Date</a>
+                        <a href="{{ url_for('tasks.view_user_tasks', user_id=user.id, sort_by='end_date') }}">End Date</a>
                     </th>
                     <th scope="col">
-                        <a href="/tasks?sort_by=priority">Priority</a>
+                        <a href="{{ url_for('tasks.view_user_tasks', user_id=user.id, sort_by='priority') }}">Priority</a>
                     </th>
                     <th scope="col">Task</th>
                     <th scope="col">
-                        <a href="/tasks/?sort_by=status">Status</a>
+                        <a href="{{ url_for('tasks.view_user_tasks', user_id=user.id, sort_by='status') }}">Status</a>
                     </th>
                     <th scope="col">Actions</th>
                 </tr>

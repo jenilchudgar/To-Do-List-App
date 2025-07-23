@@ -15,7 +15,7 @@ bp = Blueprint('tasks', __name__)
 def view_tasks():
     sort_by = request.args.get("sort_by")
     if sort_by:
-        tasks = order(sort_by)
+        tasks = order(sort_by, user_id=current_user.id)
         title = f"Entries sorted by \"{sort_by.replace('_',' ').capitalize()}\""
         li,title,status_code = get_tasks(tasks,title)
 
@@ -43,32 +43,39 @@ def view_tasks():
 @bp.route('/view_user_tasks/<int:user_id>',methods=['GET'])
 @login_required
 def view_user_tasks(user_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT * FROM users WHERE id = %s",(user_id,))
+    user = cursor.fetchone()
+    sort_by = request.args.get("sort_by")
+    if sort_by:
+        tasks = order(sort_by, user_id=user_id)
+        title = f"Entries sorted by \"{sort_by.replace('_',' ').capitalize()}\""
+        li,title,status_code = get_tasks(tasks,title)
+
+        return render_template("tasks.html",title=title,full_list=li,user=user),status_code
     if is_admin():
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("SELECT * FROM tasks WHERE user_id = %s",(user_id,))
         tasks = cursor.fetchall()
         
-        cursor.execute("SELECT * FROM users WHERE id = %s",(user_id,))
-        user = cursor.fetchone()
         if user:
             li,title, status_code = get_tasks(tasks,title=f"Task(s) for {user['username']}")
             
             if status_code == 200:
-                return render_template("tasks.html",full_list=li,title=title),status_code
+                return render_template("tasks.html",full_list=li,title=title,user=user),status_code
         
-        return render_template("result.html",title="No Tasks Currently!",msg="The following user currently has no tasks assigned to him. Click okay to add a task for them.",color=RED,image=ERROR,rd="add_task"),404
+        return render_template("result.html",title="No Tasks Currently!",msg="The following user currently has no tasks assigned to him. Click okay to add a task for them.",color=RED,image=ERROR,rd="tasks.add_task"),404
 
     return abort(401)
 
-def order(sort_by):
+def order(sort_by, user_id=None):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     valid_sorts = {
-        "id":"id ASC",
-        "assigned_to":"assigned_to.username ASC",
-        "assigned_by":"assigned_by.username ASC",
-        "status":"status = 'Pending' DESC, id ASC",
-        "start_date":"start_date ASC",
-        "end_date":"end_date ASC",
+        "id": "id ASC",
+        "assigned_to": "assigned_to.username ASC",
+        "assigned_by": "assigned_by.username ASC",
+        "status": "status = 'Pending' DESC, id ASC",
+        "start_date": "start_date ASC",
+        "end_date": "end_date ASC",
         "priority": "FIELD(priority, 'Urgent', 'Important', 'Least Important') ASC",
     }
 
@@ -80,15 +87,19 @@ def order(sort_by):
     """
     params = []
 
-    if not is_admin():
-        query += "WHERE user_id = %s"
+    if user_id is not None:
+        query += " WHERE t.user_id = %s"
+        params.append(user_id)
+    elif not is_admin():
+        query += " WHERE t.user_id = %s"
         params.append(current_user.id)
+    # else: Admin with no user_id – show all
 
-    query += f" ORDER BY {valid_sorts.get(sort_by)}"
-    
-    cursor.execute(query,params)
-    tasks = cursor.fetchall()
-    return tasks
+    if sort_by in valid_sorts:
+        query += f" ORDER BY {valid_sorts[sort_by]}"
+
+    cursor.execute(query, params)
+    return cursor.fetchall()
 
 def get_tasks(tasks,title):
     user = current_user
@@ -151,7 +162,7 @@ def add_task():
         task = request.form['task']
         start_date = request.form['start_date']
         end_date = request.form['end_date']
-        priotity = request.form['priotity']
+        priotity = request.form['priority']
 
         date = dt.today()
         time = datetime.now()
@@ -301,7 +312,7 @@ def view_task(task_id):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM tasks WHERE id=%s",(task_id,))
     task = cursor.fetchone()
-    if current_user.role == "admin" or task['id'] == current_user.id:
+    if is_admin() or task['user_id'] == current_user.id:
         cursor.execute("SELECT first_name,last_name FROM users WHERE id=%s",(task['assigned_by'],))
         assigned_by = cursor.fetchone()
 
