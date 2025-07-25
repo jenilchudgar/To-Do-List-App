@@ -10,14 +10,11 @@ import MySQLdb.cursors
 from app import mysql,mail
 from base64 import *
 import bcrypt
-from app.routes.tasks import get_tasks
+from app.routes.tasks import get_tasks,strip_images
 import io
-import matplotlib
-import matplotlib.pyplot as plt
 
 
 bp = Blueprint('users', __name__)
-matplotlib.use("Agg")
 
 # Index Page (Home)
 @bp.route('/',methods=['GET'])
@@ -122,15 +119,50 @@ def home():
         )
     )
 
-@bp.route('/search',methods=['GET','POST'])
+@bp.route('/search', methods=['GET', 'POST'])
 @login_required
 def search():
-    if request.method == "POST" and "search_box" in request.form:
+    if request.method == "POST":
+        q = request.form.get("search_box", "").strip()
+        by = request.form.get("by", "").strip()
+        sort_by = request.form.get("sort_by")
+        full_list_json = request.form.get("full_list_json")
+
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-        q = request.form['search_box']
-        by = request.form['by']
-        
+        # Handle case where full_list_json is passed for sorting only (no DB fetch again)
+        if full_list_json and sort_by:
+            try:
+                li = json.loads(full_list_json)
+
+                def sort_key(entry):
+                    assigned_to, task, assigned_by = entry
+                    if sort_by == "id":
+                        return task["id"]
+                    elif sort_by == "assigned_to":
+                        return assigned_to.lower()
+                    elif sort_by == "assigned_by":
+                        return f"{assigned_by['first_name']} {assigned_by['last_name']}".lower()
+                    elif sort_by == "start_date":
+                        return task["start_date"]
+                    elif sort_by == "end_date":
+                        return task["end_date"]
+                    elif sort_by == "priority":
+                        return {"Urgent": 0, "Important": 1, "Least Important": 2}.get(task["priority"], 99)
+                    elif sort_by == "status":
+                        return 0 if task["status"] == "Pending" else 1
+                    return 0
+
+                li.sort(key=sort_key)
+                title = f'Sorted Search Results by {sort_by.replace("_", " ").capitalize()}'
+
+                return render_template("tasks.html", title=title, full_list=li, full_list_json=json.dumps(strip_images(li))), 200
+
+            except Exception as e:
+                print("Sorting Error:", e)
+                return render_template("result.html", title="Sorting Failed", msg="Sorting of tasks failed.", color="danger", image=ERROR, rd="tasks.view_tasks"), 400
+
+        # Normal search query
         query = "SELECT * FROM tasks WHERE "
         params = []
 
@@ -141,7 +173,6 @@ def search():
             else:
                 query += f"{by} LIKE %s"
                 params.append(f"%{q}%")
-
         else:
             if by in ["start_date", "end_date"]:
                 query += f"DATE({by}) = %s AND user_id = %s"
@@ -149,25 +180,28 @@ def search():
             else:
                 query += f"{by} LIKE %s AND user_id = %s"
                 params.extend([f"%{q}%", current_user.id])
+
         try:
             cursor.execute(query, params)
-        except:
-            abort(401) 
+        except Exception as e:
+            print("DB Search Error:", e)
+            return render_template("result.html", title="Invalid Search", msg="Your query is invalid.", color=RED, image=ERROR, rd="tasks.view_tasks"), 400
+
         tasks = cursor.fetchall()
-
+        title = f'Search Results for "{q}" in {by}'
         if is_admin():
-            title = f'Search Results for {by} with "{q}" from all users'
+            title += " (All Users)"
         else:
-            title = f'Search Results for {by} with 25"{q}"'
+            title += " (Your Tasks Only)"
 
-        li,title,status_code = get_tasks(tasks,title)
-        
+        li, title, status_code = get_tasks(tasks, title)
+
         if status_code == 200:
-            return render_template("tasks.html",title=title,full_list=li),status_code
+            return render_template("tasks.html", title=title, full_list=li, full_list_json=json.dumps(strip_images(li))), 200
         else:
-            abort(404)
+            return render_template("result.html", title="No Results Found", msg="No matching tasks found.", color="warning", image=ERROR, rd="tasks.view_tasks"), 404
 
-    return render_template("index.html"),400
+    return render_template("index.html", title="Search Tasks"), 400
 
 # CRUD Operations for Users
 @bp.route('/users',methods=['GET'])

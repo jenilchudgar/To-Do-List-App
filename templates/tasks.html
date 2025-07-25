@@ -17,39 +17,42 @@
     <h2>{{title}}</h2>
     <div class="table-responsive">
         <table class="table table-bordered table-hover text-center">
-            <thead class="table-dark">
-                <tr>
+            <form method="post" id="sortForm">
+                <input type="hidden" name="full_list_json" value='{{ full_list_json|safe }}'>
+                <thead class="table-dark">
+                    <tr>
                     <th scope="col">
-                        <a href="{{ url_for('tasks.view_user_tasks', user_id=user.id, sort_by='id') }}">#</a>
+                        <button type="submit" name="sort_by" value="id" class="btn btn-link text-white p-0 m-0">Id</button>
                     </th>
                     <th scope="col">
-                        <a href="{{ url_for('tasks.view_user_tasks', user_id=user.id, sort_by='assigned_to') }}">Assigned To</a>
+                        <button type="submit" name="sort_by" value="assigned_to" class="btn btn-link text-white p-0 m-0">Assigned To</button>
                     </th>
                     <th scope="col">
-                        <a href="{{ url_for('tasks.view_user_tasks', user_id=user.id, sort_by='assigned_by') }}">Assigned To</a>
+                        <button type="submit" name="sort_by" value="assigned_by" class="btn btn-link text-white p-0 m-0">Assigned By</button>
                     </th>
                     <th scope="col">
-                        <a href="{{ url_for('tasks.view_user_tasks', user_id=user.id, sort_by='start_date') }}">Start Date</a>
+                        <button type="submit" name="sort_by" value="start_date" class="btn btn-link text-white p-0 m-0">Start Date</button>
                     </th>
                     <th scope="col">
-                        <a href="{{ url_for('tasks.view_user_tasks', user_id=user.id, sort_by='end_date') }}">End Date</a>
+                        <button type="submit" name="sort_by" value="end_date" class="btn btn-link text-white p-0 m-0">End Date</button>
                     </th>
                     <th scope="col">
-                        <a href="{{ url_for('tasks.view_user_tasks', user_id=user.id, sort_by='priority') }}">Priority</a>
+                        <button type="submit" name="sort_by" value="priority" class="btn btn-link text-white p-0 m-0">Priority</button>
                     </th>
                     <th scope="col">Task</th>
                     <th scope="col">
-                        <a href="{{ url_for('tasks.view_user_tasks', user_id=user.id, sort_by='status') }}">Status</a>
+                        <button type="submit" name="sort_by" value="status" class="btn btn-link text-white p-0 m-0">Status</button>
                     </th>
                     <th scope="col">Actions</th>
-                </tr>
-            </thead>
+                    </tr>
+                </thead>
+                </form>
             <tbody class="table-group-divider">
                 {% for data in full_list %}
                     <tr>
                         <td>{{ data[1].id }}</td> <!-- ID -->
                         <td>{{ data[0] }} </td> <!-- Assigned To (user) -->
-                        <td >{{ data[3].first_name }} {{ data[3].last_name }}</td> <!-- Assigned By -->
+                        <td >{{ data[2].first_name }} {{ data[2].last_name }}</td> <!-- Assigned By -->
                         <td>{{ data[1].start_date }}</td> <!-- Start Date -->
                         <td>{{ data[1].end_date }}</td> <!-- End Date -->
                         
@@ -75,7 +78,7 @@
                         <td>
                             <div class="d-flex flex-wrap gap-2" style="display: flex;">
 
-                                {% if current_user.id == data[3].id or current_user.role == "admin" %}
+                                {% if current_user.id == data[2].id or current_user.role == "admin" %}
                                     <form method="post" action="{{ url_for('tasks.delete_task', task_id=data[1].id) }}" class="m-0 p-0">
                                         <button type="submit" class="btn btn-outline-danger btn-sm"
                                             onclick="return confirm('Are you sure you want to delete this task?')">
