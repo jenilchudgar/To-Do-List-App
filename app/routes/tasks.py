@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request,redirect,url_for
 from flask_login import login_required, current_user
 from app import mysql
 from flask import abort
@@ -7,10 +7,12 @@ from app.utils import *
 from app.constants import *
 from flask_mysqldb import MySQLdb
 from base64 import *
-import json
+import json,random
+from collections import defaultdict
+from app.constants import comment_colors
 
 bp = Blueprint('tasks', __name__)
-
+   
 def strip_images(li):
     safe = []
 
@@ -32,7 +34,6 @@ def strip_images(li):
         safe.append([assigned_to, task_clean, assigned_by_clean])
 
     return safe
-
 
 @bp.route('/tasks',methods=['GET','POST'])
 @login_required
@@ -368,12 +369,35 @@ def mark_complete(task_id):
     else:
         abort(401)
 
+def build_comment_tree(comments):
+    children_map = defaultdict(list)
+    
+    for comment in comments:
+        parent_id = comment['parent_id']
+        if parent_id:
+            children_map[parent_id].append(comment)
+
+    def attach_children(comment):
+        comment['replies'] = []
+        for child in children_map.get(comment['id'],[]):
+            attach_children(child)
+            comment['replies'].append(child)
+    
+    root_comments = []
+    for comment in comments:
+        if comment['parent_id'] is None:
+            attach_children(comment)
+            root_comments.append(comment)
+
+    return root_comments
+
 @bp.route('/task/<int:task_id>',methods=['GET','POST'])
 @login_required
 def view_task(task_id):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute("SELECT * FROM tasks WHERE id=%s",(task_id,))
     task = cursor.fetchone()
+
     if is_admin() or task['user_id'] == current_user.id:
         cursor.execute("SELECT first_name,last_name FROM users WHERE id=%s",(task['assigned_by'],))
         assigned_by = cursor.fetchone()
@@ -385,8 +409,34 @@ def view_task(task_id):
             task['image'] = b64encode(task['image']).decode('utf-8')
         else:
             task['image'] = ""
-            
-        return render_template("view_task.html",title=f"Task {task_id}",task=task,assigned_by=assigned_by,assigned_to=assigned_to)
+        
+        cursor.execute("SELECT * FROM comments WHERE task_id = %s",(task_id,))
+        comments = cursor.fetchall()
+
+        c = build_comment_tree(comments)
+        print(c)
+
+        def enrich_comment(comment):
+            cursor.execute("SELECT first_name, last_name, profile_picture FROM users WHERE id = %s", (comment['user_id'],))
+            user = cursor.fetchone()
+
+            if user and user.get('profile_picture'):
+                user['profile_picture'] = b64encode(user['profile_picture']).decode('utf-8')
+            else:
+                user['profile_picture'] = ""
+
+            comment['user'] = user
+
+            # Color
+            comment['color'] = random.choice(comment_colors)
+
+            for reply in comment.get('replies', []):
+                enrich_comment(reply)
+
+        for comment in c:
+            enrich_comment(comment)
+
+        return render_template("view_task.html",title=f"Task {task_id}",task=task,assigned_by=assigned_by,assigned_to=assigned_to,comments=c)
     
     return abort(401)
 
@@ -457,3 +507,22 @@ def progress():
             user['bg'] = "danger"
 
     return render_template("progress.html",users=all_users,title="Tasks Progress for All Users")
+
+# Comments
+@bp.route('/add_comment/<int:task_id>',methods=['POST'])
+@login_required
+def add_comment(task_id):
+    comment_txt = request.form.get("comment")
+    parent_id = request.form.get("parent_id") 
+
+    if not parent_id:
+        parent_id = None
+        
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute(
+        "INSERT INTO comments (task_id, user_id, txt, parent_id) VALUES (%s, %s, %s, %s)",
+        (task_id, current_user.id, comment_txt, parent_id)
+    )
+    mysql.connection.commit()
+
+    return redirect(url_for("tasks.view_task", task_id=task_id))

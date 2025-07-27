@@ -6,10 +6,30 @@
     .c {
         margin: 15px;
     }
+    .reply-icon {
+        background: none;
+        border: none;
+        color: #007bff;
+        cursor: pointer;
+        padding: 0;
+        margin-top: 5px;
+    }
+    .comment-box {
+        margin-top: 15px;
+    }
+    .nested-replies {
+        margin-left: 25px;
+        padding-left: 15px;
+        display: none;
+    }
+    .gap-2 {
+        gap: 0.5rem;
+    }
+
 </style>
 
 <div class="c">
-    <h2>{{title}}</h2>
+    <h2>{{ title }}</h2>
     <hr>
     <div id="details">
         <p><strong>Assigned By: </strong>{{assigned_by['first_name']}} {{assigned_by['last_name']}}</p>
@@ -44,6 +64,92 @@
 
     <hr>
 
+    <h4>Comments</h4>
+    
+     <form method="POST" action="{{ url_for('tasks.add_comment', task_id=task.id) }}">
+        <textarea name="comment" class="form-control" placeholder="Add a new comment..." rows="3"></textarea>
+        <input type="hidden" name="parent_id" value=""> 
+        <button type="submit" class="btn btn-success mt-2">Post Comment</button>
+    </form>
+
+    {% macro render_comment(comment) %}
+    <div class="comment-box" style="border-left: 5px solid {{ comment.color }}; padding-left: 10px;">
+        <div class="d-flex align-items-center">
+            {% if comment.user.profile_picture %}
+                <img src="data:image/png;base64,{{ comment.user.profile_picture }}" width="30" height="30" class="rounded-circle mr-2" style="object-fit: cover;">
+            {% else %}
+                <div class="rounded-circle bg-secondary text-white text-center mr-2" style="width:30px; height:30px; line-height:30px;">
+                   
+                </div>
+            {% endif %}
+            <strong>{{ comment.user.first_name }} {{ comment.user.last_name }}</strong>
+            <span class="ml-2 text-muted small" style="margin-left: 5px; margin-top: 2px;">{{ comment.time_comment.strftime('%d/%m/%Y - %I:%M %p') }}</span>
+        </div>
+        <p style="margin-top: 0;">{{ comment.txt }}</p>
+
+        <!-- Reply Icon Button -->
+        <button class="btn btn-primary btn-sm" id="reply-icon-{{ comment.id }}" onclick="toggleReplyForm({{ comment.id }})">
+            Reply
+        </button>
+
+        <!-- Hidden Reply Form -->
+        <form method="POST" action="{{ url_for('tasks.add_comment', task_id=task.id) }}" class="reply-box" id="reply-box-{{ comment.id }}" style="display: none;">
+            <input type="hidden" name="parent_id" value="{{ comment.id }}" style="display: none;"> 
+            <textarea name="comment" rows="2" class="form-control" placeholder="Write a reply..."></textarea>
+            <button type="submit" class="btn btn-primary btn-sm mb-2 mt-2">Reply</button>
+        </form>
+
+        {% if comment.replies %}
+            <button 
+                class="btn btn-sm btn-warning"
+                onclick="toggleReplies({{ comment.id }})"
+                id="toggle-replies-btn-{{ comment.id }}"
+                data-reply-count="{{ comment.replies|length }}"
+            >
+                Show Replies ({{ comment.replies|length }})
+            </button>
+
+            <div class="nested-replies" id="replies-{{ comment.id }}">
+                {% for reply in comment.replies %}
+                    {{ render_comment(reply) }}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    {% endmacro %}
+
+    <!-- All Comments -->
+    <div class="all-comments mt-4">
+        {% for comment in comments %}
+            {{ render_comment(comment) }}
+        {% endfor %}
+    </div>
+
+    <script>
+    function toggleReplyForm(commentId) {
+        const iconBtn = document.getElementById('reply-icon-' + commentId);
+        const formBox = document.getElementById('reply-box-' + commentId);
+
+        iconBtn.style.display = 'none';
+        formBox.style.display = 'block';
+    }
+
+    function toggleReplies(commentId) {
+        const replyDiv = document.getElementById('replies-' + commentId);
+        const toggleBtn = document.getElementById('toggle-replies-btn-' + commentId);
+
+        if (replyDiv.style.display === "none" || replyDiv.style.display === "") {   
+            replyDiv.style.display = "block";
+            toggleBtn.innerText = "Hide Replies";
+        } else {
+            replyDiv.style.display = "none";
+            toggleBtn.innerText = "Show Replies (" + toggleBtn.dataset.replyCount + ")";
+        }
+    }
+    </script>
+
+    <hr>
+    <!-- Actions (unchanged) -->
     <h4>Actions</h4>
     <div class="d-flex flex-wrap gap-2" style="display: flex;">
 
@@ -75,7 +181,5 @@
 
     </div>
 </div>
-
 <br>
-
 {% endblock %}
