@@ -64,6 +64,40 @@
 
     <hr>
 
+    <!-- Actions -->
+    <h4>Actions</h4>
+    <div class="d-flex flex-wrap gap-2" style="display: flex;">
+
+        {% if current_user.id == task.id or current_user.role == "admin" %}
+            <form method="post" action="{{ url_for('tasks.delete_task', task_id=task.id) }}" class="m-0 p-0">
+                <button type="submit" class="btn btn-outline-danger btn-sm"
+                    onclick="return confirm('Are you sure you want to delete this task?')">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </form>
+
+            <a href="{{ url_for('tasks.update_task', task_id=task.id) }}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-pencil-square"></i> Update
+            </a>
+            {% endif %}
+
+            {% if task.status == "Pending" %}
+            <a href="{{ url_for('tasks.mark_complete', task_id=task.id) }}" class="btn btn-outline-info btn-sm"
+                onclick="return confirm('Are you sure you want to mark this task complete?')">
+                <i class="bi bi-check-circle"></i> Mark Complete
+            </a>
+            {% endif %}
+
+            {% if current_user.role == "admin" %}
+            <a href="{{ url_for('tasks.reassign_task', task_id=task.id) }}" class="btn btn-outline-dark btn-sm">
+                <i class="bi bi-arrow-repeat"></i> Reassign
+            </a>
+        {% endif %}
+
+    </div>
+
+    <hr>
+
     <h4>Comments</h4>
     
      <form method="POST" action="{{ url_for('tasks.add_comment', task_id=task.id) }}">
@@ -115,6 +149,16 @@
                 {% endfor %}
             </div>
         {% endif %}
+        
+        <span >
+            {% if comment['user_id'] == current_user.id or current_user.role == "admin" %}
+            <form method="POST" action="{{ url_for('tasks.delete_comment', comment_id=comment.id, task_id=task.id) }}" style="display: inline;" onclick="return confirm('Are you sure you want to delete this comment? This will also delete its replies.')">
+                <button type="submit" class="btn btn-danger btn-sm mb-2 mt-2" >
+                    <img src="{{ url_for('static', filename='images/delete.png') }}" alt="Delete Button" height="20px">
+                </button>
+            </form>
+        {% endif %}
+        </span>
     </div>
     {% endmacro %}
 
@@ -124,7 +168,7 @@
             {{ render_comment(comment) }}
         {% endfor %}
     </div>
-
+    <hr>
     <script>
     function toggleReplyForm(commentId) {
         const iconBtn = document.getElementById('reply-icon-' + commentId);
@@ -147,39 +191,7 @@
         }
     }
     </script>
-
-    <hr>
-    <!-- Actions (unchanged) -->
-    <h4>Actions</h4>
-    <div class="d-flex flex-wrap gap-2" style="display: flex;">
-
-        {% if current_user.id == task.id or current_user.role == "admin" %}
-            <form method="post" action="{{ url_for('tasks.delete_task', task_id=task.id) }}" class="m-0 p-0">
-                <button type="submit" class="btn btn-outline-danger btn-sm"
-                    onclick="return confirm('Are you sure you want to delete this task?')">
-                    <i class="bi bi-trash"></i> Delete
-                </button>
-            </form>
-
-            <a href="{{ url_for('tasks.update_task', task_id=task.id) }}" class="btn btn-outline-warning btn-sm">
-                <i class="bi bi-pencil-square"></i> Update
-            </a>
-            {% endif %}
-
-            {% if task.status == "Pending" %}
-            <a href="{{ url_for('tasks.mark_complete', task_id=task.id) }}" class="btn btn-outline-info btn-sm"
-                onclick="return confirm('Are you sure you want to mark this task complete?')">
-                <i class="bi bi-check-circle"></i> Mark Complete
-            </a>
-            {% endif %}
-
-            {% if current_user.role == "admin" %}
-            <a href="{{ url_for('tasks.reassign_task', task_id=task.id) }}" class="btn btn-outline-dark btn-sm">
-                <i class="bi bi-arrow-repeat"></i> Reassign
-            </a>
-        {% endif %}
-
-    </div>
 </div>
+<br>
 <br>
 {% endblock %}

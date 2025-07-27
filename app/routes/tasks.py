@@ -353,7 +353,11 @@ def update_task(task_id):
 @bp.route('/mark_complete/<int:task_id>')
 @login_required
 def mark_complete(task_id):
-    if is_admin():
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT * FROM tasks WHERE id = %s",(task_id,))
+    cursor.execute("SELECT * FROM users WHERE id = %s",(cursor.fetchone()['user_id'],))
+    user = cursor.fetchone()
+    if is_admin() or user['id'] == current_user.id:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("UPDATE tasks SET status = %s WHERE id = %s",("Complete",task_id))
         mysql.connection.commit()
@@ -515,6 +519,9 @@ def add_comment(task_id):
     comment_txt = request.form.get("comment")
     parent_id = request.form.get("parent_id") 
 
+    if comment_txt == "":
+        return render_template("result.html",title="No Text Entered",msg="Enter some text for a comment to be displayed",color=RED,image=ERROR,rd="tasks.view_tasks"),206 
+
     if not parent_id:
         parent_id = None
         
@@ -526,3 +533,18 @@ def add_comment(task_id):
     mysql.connection.commit()
 
     return redirect(url_for("tasks.view_task", task_id=task_id))
+
+@bp.route('/delete_comment/<int:comment_id>/<int:task_id>',methods=['POST'])
+@login_required
+def delete_comment(comment_id,task_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute("SELECT * FROM comments WHERE id = %s",(comment_id,))
+    comment = cursor.fetchone()
+
+    if comment['user_id'] == current_user.id or is_admin():
+        cursor.execute("DELETE FROM comments WHERE id = %s",(comment_id,))
+        mysql.connection.commit()
+
+        return redirect(url_for("tasks.view_task", task_id=task_id))
+    else:
+        abort(401)

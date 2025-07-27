@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    {% if current_user.role == "admin" %}
         <style>
             .c{
                 margin: 15px;
@@ -22,5 +21,4 @@
                 <br>
             {% endfor %}
         </div>
-    {% endif %}
 {% endblock %}
