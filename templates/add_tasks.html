@@ -23,7 +23,7 @@
             <input type="date" name="end_date">
         </div>
 
-        <select class="form-select box" aria-label="Default select example" style="display: block; width: 200px; margin-top: 10px; margin-bottom: 10px;" name="priotity" >
+        <select class="form-select box" aria-label="Default select example" style="display: block; width: 200px; margin-top: 10px; margin-bottom: 10px;" name="priority" >
                 {% for p in priority %}
                     {% if p == "Urgent" %}
                         <option value="{{p}}">🔴 {{p}}</option>

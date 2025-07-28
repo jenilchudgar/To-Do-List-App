@@ -65,9 +65,9 @@
                         {% endif %}
                         
                         {% if data[1].task|length >=100 %}
-                            <td onclick="window.location.href='task/{{data[1].id}}'" style="cursor: pointer;">{{ data[1].task[:100].rsplit(' ',1)[0]}} ...</td> <!-- Descr. -->
+                            <td onclick="window.location.href='/task/{{data[1].id}}'" style="cursor: pointer;">{{ data[1].task[:100].rsplit(' ',1)[0]}} ...</td> <!-- Descr. -->
                         {% else %}
-                            <td onclick="window.location.href='task/{{data[1].id}}'" style="cursor: pointer;">{{ data[1].task}}</td> <!-- Descr. -->
+                            <td onclick="window.location.href='/task/{{data[1].id}}'" style="cursor: pointer;">{{ data[1].task}}</td> <!-- Descr. -->
                         {% endif %}
 
                             {% if data[1].status == "Pending" %}

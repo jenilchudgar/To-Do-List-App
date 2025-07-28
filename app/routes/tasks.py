@@ -37,7 +37,7 @@ def strip_images(li):
 
 @bp.route('/tasks',methods=['GET','POST'])
 @login_required
-def view_tasks():
+def tasks():
     if request.method == "POST":
         sort_by = request.form.get("sort_by")
         full_list_json = request.form.get("full_list_json")
@@ -182,7 +182,7 @@ def get_tasks(tasks,title):
         li = []
         title = "No Task Assigned Currently!"
         status_code = 404
-        return (title,li,status_code)
+        return (li,title,status_code)
     
     else:
         assigned_by_list = []
@@ -226,7 +226,7 @@ def add_task():
         task = request.form['task']
         start_date = request.form['start_date']
         end_date = request.form['end_date']
-        priotity = request.form['priority']
+        priority = request.form['priority']
 
         date = dt.today()
         time = datetime.now()
@@ -249,7 +249,7 @@ def add_task():
         status = "Pending"
 
         cursor.execute("INSERT INTO tasks (user_id, task,image,start_date,end_date,currentdt,assigned_by,status,priority) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            (user_id,task,image_data,start_date,end_date,currentdt,assigned_by,status,priotity)
+            (user_id,task,image_data,start_date,end_date,currentdt,assigned_by,status,priority)
         )
         mysql.connection.commit()
         

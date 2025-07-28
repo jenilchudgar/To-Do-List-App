@@ -1,4 +1,4 @@
-from flask import request,render_template,abort,session,Blueprint,send_file
+from flask import request,render_template,abort,session,Blueprint,send_file,redirect,url_for
 from flask_login import login_required,current_user
 from datetime import datetime
 from flask_mail import Message
@@ -115,7 +115,7 @@ def home():
         weather_data = None
 
     return render_template("index.html",is_user=is_user,admin=is_admin(),user=user,col_names=col_names,img=base64_img,id=id,weather_data=weather_data,weather_class=weather_class,today=datetime.today().strftime(r"%B %d, %Y"),last_seen_users=random.sample(
-            list(new_users),k=min(3,len(new_users))
+            list(new_users),k=min(2,len(new_users))
         )
     )
 
@@ -267,7 +267,7 @@ def delete_user(user_id):
         cursor.execute("SELECT * FROM users")
         users = cursor.fetchall()
 
-        return render_template("users.html",users=users)
+        return rediret(url_for('users.home'))
 
     return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color=RED,image=ERROR,rd="users.home"),401
 
