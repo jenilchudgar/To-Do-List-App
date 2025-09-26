@@ -1,7 +1,9 @@
 GREEN = "#67ffa1"
 RED = "#fc4747"
+YELLOW = "#fcd303"
 OK = "tick.png"
 ERROR = "error.png"
+BRAINWAVE = "brainwaves.png"
 
 comment_colors = [
     "#f6d186",  # Soft Amber

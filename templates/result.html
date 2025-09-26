@@ -38,7 +38,6 @@
         .popup img{
             margin-top: -50px;
             user-select: none;
-            pointer-events: none;
         }
 
         .container{
@@ -48,20 +47,67 @@
             align-items: center;
             justify-content: center;
         }
+
+        .code-line {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px; /* space between code and button */
+            margin-left: 8px;
+        }
+
+        .room-code {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .copy-btn {
+            cursor: pointer;
+            width: 20px;   /* smaller so it fits inline */
+            height: 20px;
+            margin: 0;     /* remove top margin */
+        }
+
     </style>
 
     <div class="container">
         <div class="popup" id="popup">
             <img src="/static/images/{{image}}" alt="image" width="100px" height="100px">
             <h2>{{title}}</h2>
-            <p>{{msg}}</p>
-            <a type="button" href="{{ url_for(rd) }}" class="btn btn-success">Okay</a>
+            <p>{{msg}} {% if board_id is defined %}
+                <span class="code-line">
+                    <img src="{{ url_for('static', filename='images/copy.png')}}" 
+                        alt="Copy" 
+                        class="copy-btn" 
+                        id="copyBtn"
+                        title="Copy Room Code">
+                </span>
+            {% endif %}</p>
+
+            <a type="button" 
+                href="{% if board_id is defined %}{{ url_for(rd, board_id=board_id) }}{% else %}{{ url_for(rd) }}{% endif %}" 
+                class="btn btn-success">
+                Okay
+            </a>
         </div>
     </div>
 
     <script>
         setTimeout(() => {
             document.getElementById("popup").classList.add("open-popup")
-        },50);
+        }, 50);
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const copyBtn = document.getElementById("copyBtn");
+            if(copyBtn){
+                copyBtn.addEventListener("click", () => {
+                    const code = "{{ code|e }}";
+
+                    navigator.clipboard.writeText(code).then(() => {
+                        alert("Room code copied: " + code);
+                    }).catch(err => {
+                        console.error("Failed to copy", err);
+                    });
+                });
+            }
+        });
     </script>
 {% endblock %}

@@ -76,7 +76,7 @@
                 </button>
             </form>
 
-            <a href="{{ url_for('tasks.update_task', task_id=task.id) }}" class="btn btn-outline-warning btn-sm">
+            <a href="{{ url_for('tasks.update_task', task_id=task.id) }}" class="btn btn-outline-warning btn-sm" >
                 <i class="bi bi-pencil-square"></i> Update
             </a>
             {% endif %}
@@ -92,6 +92,13 @@
             <a href="{{ url_for('tasks.reassign_task', task_id=task.id) }}" class="btn btn-outline-dark btn-sm">
                 <i class="bi bi-arrow-repeat"></i> Reassign
             </a>
+            {% endif %}
+
+            {% if current_user.role == "admin" or current_user.id == task['user_id'] %}
+            <a type="button" class="btn btn-outline-success btn-sm" href="{{ url_for('board.check', task_id=task.id) }}">
+                <i class="bi bi-arrow-repeat"></i> Brainwave 🧠
+            </a>
+            
         {% endif %}
 
     </div>

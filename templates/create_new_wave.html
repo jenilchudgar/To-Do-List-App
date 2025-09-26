@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {{ csrf_input }}
+    <style>
+        .box{
+            margin-left: 25px;
+            margin-right: 100px;
+        }
+        small, label{
+            user-select: none;
+            user-select: none; 
+            -webkit-user-select: none; 
+            -moz-user-select: none;    
+            -ms-user-select: none;
+        }
+        .fixedw{
+            width: 50vw;
+        }
+        form, .center{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+
+    <div>
+        <h2 class="center">Create a New Wave</h2>
+
+        <form method="POST" enctype="multipart/form-data" action="{{url_for('board.new_wave',task_id=task_id)}}">
+            <div class="form-row">
+                <div class="col-md-4 mb-3">
+                    <label>Type</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="radio" id="open" value="open" checked>
+                        <label class="form-check-label" for="open">Open</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="radio" id="closed" value="closed">
+                        <label class="form-check-label" for="closed">Closed</label>
+                    </div>    
+                </div>
+                <div class="col-md-4 mb-3" style="visibility: hidden;" id="pass">  
+                    <label for="exampleInputPassword1" style="margin-top: 10px;">Password</label>
+                    <input type="password" class="form-control fixedw"  id="password" placeholder="Password" style="margin-bottom: 10px;" name="password">
+                </div>
+            
+                <button class="btn btn-success" type="submit"  style="margin-top: 10px; margin-bottom: 50px;">Create</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const openR = document.getElementById("open");
+        const closedR = document.getElementById("closed");
+        const pass = document.getElementById("pass");
+
+        // Add Event Listn.
+        openR.addEventListener("change",() => {
+            pass.style.visibility = "hidden"; // If open -> hide pass
+        });
+
+        closedR.addEventListener("change",() => {
+            pass.style.visibility = "visible"; // If closed -> show pass
+        });
+    </script>
+{% endblock %}

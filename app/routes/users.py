@@ -223,7 +223,7 @@ def update_user(user_id):
     user = cursor.fetchone()
 
     if not user or not(user['id'] == current_user.id):
-        return abort(404)
+        return render_template("result.html",title="Your account doesn't exist.",msg="Your account has not been found on the website. Please register to update your profile",rd="users.register",image=ERROR,color=RED),404
     
     if request.method == "POST":
         first_name = request.form['first_name']
@@ -267,7 +267,7 @@ def delete_user(user_id):
         cursor.execute("SELECT * FROM users")
         users = cursor.fetchall()
 
-        return rediret(url_for('users.home'))
+        return redirect(url_for('users.home'))
 
     return render_template("result.html",title="Unauthorized Access!",msg="The following site can only be accessed by an admin. Contact your administrator for more information.",color=RED,image=ERROR,rd="users.home"),401
 
