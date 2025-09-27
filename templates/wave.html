@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .box {
+        margin-left: 25px;
+        margin-right: 100px;
+    }
+
+    small,
+    label {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+    }
+
+    .fixedw {
+        width: 50vw;
+    }
+
+    .center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .palette {
+        display: grid;
+        grid-template-columns: repeat(8, 20px);
+        gap: 5px;
+    }
+
+    .color-box {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+    }
+
+    .selected-color {
+        width: 60px;
+        height: 60px;
+        border: 2px solid #000;
+        border-radius: 6px;
+    }
+</style>
+
+<div>
+    <h2 class="center">Wave - Task {{task['id']}}</h2>
+    <div class="box">
+        <p><strong>Room Code: </strong>{{board['room_code']}}</p>
+    </div>
+
+    <div class="center">
+        <canvas id="drawingCanvas"
+                style="cursor: url('/static/images/pen.png') 12 12, default; 
+                       border: 2px solid black; width: 80%; height: 70vh;">
+        </canvas>
+    </div>
+
+    <div style="border: 2px solid black; margin: 10px 100px 30px 100px; padding: 20px;">
+        <div class="center" style="gap: 15px;">
+            <div>
+                <button type="button" class="btn btn-warning" id="pen">
+                    <img src="/static/images/pen.png" style="height: 30px;" id="pen"> Pen
+                </button>
+            </div>
+
+            <div class="mb-3">
+                <input type="color" class="form-control form-control-color" 
+                       id="penColourPicker" value="#000000" title="Select Primary Color">
+            </div>
+
+            <div class="palette" id="palette" 
+                 style="border: 2px solid rgba(0, 0, 0, 0.455); padding: 2.5px;">
+            </div>
+
+            <button type="button" class="btn btn-success" id="bucket">
+                <img src="/static/images/paint-bucket.png" style="height: 30px;"> Bucket Fill
+            </button>
+
+            <button type="button" class="btn btn-info" id="eraser">
+                <img src="/static/images/eraser.png" style="height: 30px;">
+            </button>
+
+            <button type="button" class="btn btn-danger" id="clear">
+                <img src="/static/images/delete.png" style="height: 30px;"> Clear
+            </button>
+
+            <div>
+                <label for="range4" class="form-label">Select Size</label>
+                <input type="range" class="form-range" min="1" max="20" value="2" id="range4">
+                <output for="range4" id="rangeValue" aria-hidden="true"></output>
+            </div>
+
+            <div class="mb-3" id="background">
+                <input type="color" class="form-control form-control-color" 
+                       id="bgPicker" value="#FFFFFF" title="Choose your background color">
+            </div>
+        </div>
+
+        <div>
+            <div class="tools center" style="gap: 10px;">
+                <button type="button" class="btn" id="line" style="background-color: #a448fa">
+                    <img src="/static/images/shapes/line.png" style="height: 20px;">
+                </button>
+                <button type="button" class="btn" id="rect" style="background-color: #a448fa">
+                    <img src="/static/images/shapes/rectangle.png" style="height: 20px;">
+                </button>
+                <button type="button" class="btn" id="tri" style="background-color: #a448fa">
+                    <img src="/static/images/shapes/triangle.png" style="height: 20px;">
+                </button>
+                <button type="button" class="btn" id="circle" style="background-color: #a448fa">
+                    <img src="/static/images/shapes/circle.png" style="height: 20px;">
+                </button>
+                <button type="button" class="btn" id="select" style="background-color: #67fa5a">
+                    <img src="/static/images/shapes/select.png" style="height: 20px;">Select
+                </button>
+            </div>
+
+            <div class="center">
+                <p>Drawing Tools</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('drawingCanvas');
+    const ctx = canvas.getContext('2d');
+    const palette = document.getElementById('palette');
+    const clearBtn = document.getElementById('clear');
+    const eraserBtn = document.getElementById('eraser');
+    const penBtn = document.getElementById('pen');
+    const backgroundPicker = document.getElementById('bgPicker');
+    const penColor = document.getElementById('penColourPicker');
+    const bucket = document.getElementById('bucket');
+
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+
+    const scale = window.devicePixelRatio;
+    canvas.width = canvas.clientWidth * scale;
+    canvas.height = canvas.clientHeight * scale;
+    ctx.scale(scale, scale);
+
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let currentTool = 'pen';
+    let strokes = [];
+    let currentStroke = null;
+
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+
+    function draw(e) {
+        if (!isDrawing) return;
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.stroke();
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+        isDrawing = true;
+        startX = e.offsetX;
+        startY = e.offsetY;
+        lastX = startX;
+        lastY = startY;
+        currentStroke = {
+            color: ctx.strokeStyle,
+            width: ctx.lineWidth,
+            type: currentTool,
+            startX,
+            startY,
+            endX: startX,
+            endY: startY
+        };
+        if (currentTool === "select") {
+            tempImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isDrawing) return;
+
+        if (currentTool === 'pen' || currentTool === 'eraser') {
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            if (currentStroke && currentStroke.points) {
+                currentStroke.points.push([e.offsetX, e.offsetY]);
+            }
+        } else if (['line', 'rectangle', 'triangle', 'circle'].includes(currentTool)) {
+            ctx.putImageData(tempImage, 0, 0);
+            const endX = e.offsetX;
+            const endY = e.offsetY;
+            ctx.strokeStyle = penColor.value;
+            ctx.lineWidth = rangeInput.value;
+
+            switch (currentTool) {
+                case 'line':
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(endX, endY);
+                    ctx.stroke();
+                    break;
+                case 'rectangle':
+                    ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+                    break;
+                case 'triangle':
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(endX, endY);
+                    ctx.lineTo(2 * startX - endX, endY);
+                    ctx.closePath();
+                    ctx.stroke();
+                    break;
+                case 'circle':
+                    ctx.beginPath();
+                    const radius = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
+                    ctx.arc(startX, startY, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+            }
+        } else if (currentTool === "select") {
+            const endX = e.offsetX;
+            const endY = e.offsetY;
+            ctx.putImageData(tempImage, 0, 0);
+            ctx.setLineDash([6]);
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+            ctx.setLineDash([]);
+        }
+
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+    });
+
+    function drawSmallHolder(x1, y1, x2, y2) {
+        const handles = [
+            [x1, y1], // top-left
+            [(x1 + x2)/2, y1], // top-center
+            [x2, y1], // top-right
+            [x2, (y1 + y2)/2], // right-center
+            [x2, y2], // bottom-right
+            [(x1 + x2)/2, y2], // bottom-center
+            [x1, y2], // bottom-left
+            [x1, (y1 + y2)/2] // left-center
+        ];
+
+        handles.forEach(([hx, hy]) => {
+            ctx.fillStyle = "#fff";
+            ctx.strokeStyle = "#000";
+            ctx.fillRect(hx - 3, hy - 3, 6, 6);
+            ctx.strokeRect(hx - 3, hy - 3, 6, 6);
+        });
+    }
+
+    canvas.addEventListener('mouseup', (e) => {
+        if (currentStroke) strokes.push(currentStroke);
+
+        if (currentTool === "select") {
+            const endX = e.offsetX;
+            const endY = e.offsetY;
+            drawSmallHolder(startX, startY, endX, endY);
+        }
+
+        isDrawing = false;
+        currentStroke = null;
+    });
+
+    canvas.addEventListener('mouseout', () => isDrawing = false);
+
+    const colors = [
+        "#FF0000", "#FF6600", "#FFFF00", "#66FF00", "#0d6300",
+        "#00FF99", "#00FFFF", "#3399FF", "#0000FF", "#9900FF",
+        "#FF00FF", "#FF3399", "#000099", "#666666", "#FFFFFF", "#000000"
+    ];
+
+    colors.forEach(color => {
+        const div = document.createElement('div');
+        div.className = 'color-box';
+        div.style.backgroundColor = color;
+        div.addEventListener('click', () => {
+            ctx.strokeStyle = color;
+            penColor.value = color;
+        });
+        palette.appendChild(div);
+    });
+
+    clearBtn.addEventListener('click', () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    eraserBtn.addEventListener('click', () => {
+        currentTool = 'eraser';
+        ctx.lineWidth = 15;
+        ctx.globalCompositeOperation = "destination-out";
+        canvas.style.cursor = "url('static/images/eraser_cursor.png') 12 12, default";
+    });
+
+    penBtn.addEventListener('click', () => {
+        currentTool = 'pen';
+        ctx.globalCompositeOperation = "source-over";
+        canvas.style.cursor = "url('/static/images/pen.png') 12 12, default";
+    });
+
+    bucket.addEventListener('click', () => {
+        currentTool = "bucket";
+        canvas.style.cursor = "url('/static/images/bucket_cursor.png') 12 12, default";
+    });
+
+    canvas.addEventListener('click', (e) => {
+        if (currentTool === 'bucket') {
+            const x = Math.floor(e.offsetX * scale);
+            const y = Math.floor(e.offsetY * scale);
+            floodFill(x, y, penColor.value);
+        }
+    });
+
+    function floodFill(x, y, color) {
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+        const width = imgData.width;
+        const stack = [[x, y]];
+        const targetColor = getPixelColor(data, x, y, width);
+        const fillColorArr = hexToRGBA(color);
+
+        if (colorsMatch(targetColor, fillColorArr)) return;
+
+        while (stack.length) {
+            const [cx, cy] = stack.pop();
+            const idx = (cy * width + cx) * 4;
+            if (!colorsMatch([data[idx], data[idx + 1], data[idx + 2], data[idx + 3]], targetColor)) continue;
+
+            data[idx] = fillColorArr[0];
+            data[idx + 1] = fillColorArr[1];
+            data[idx + 2] = fillColorArr[2];
+            data[idx + 3] = fillColorArr[3];
+
+            stack.push([cx + 1, cy]);
+            stack.push([cx - 1, cy]);
+            stack.push([cx, cy + 1]);
+            stack.push([cx, cy - 1]);
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+    }
+
+    function hexToRGBA(hex) {
+        const r = parseInt(hex.substr(1, 2), 16);
+        const g = parseInt(hex.substr(3, 2), 16);
+        const b = parseInt(hex.substr(5, 2), 16);
+        return [r, g, b, 255];
+    }
+
+    function getPixelColor(data, x, y, width) {
+        const idx = (y * width + x) * 4;
+        return [data[idx], data[idx + 1], data[idx + 2], data[idx + 3]];
+    }
+
+    function colorsMatch(c1, c2, tolerance = 10) {
+        return c1.every((v, i) => Math.abs(v - c2[i]) <= tolerance);
+    }
+
+    backgroundPicker.addEventListener('change', () => {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.fillStyle = backgroundPicker.value;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        strokes.forEach(s => {
+            ctx.strokeStyle = s.color;
+            ctx.lineWidth = s.width;
+            ctx.beginPath();
+            s.points.forEach(([x, y], i) => {
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+        });
+    });
+
+    penColor.addEventListener('input', () => {
+        ctx.strokeStyle = penColor.value;
+    });
+
+    const rangeInput = document.getElementById('range4');
+    const rangeOutput = document.getElementById('rangeValue');
+    rangeOutput.textContent = rangeInput.value;
+
+    rangeInput.addEventListener('input', function () {
+        rangeOutput.textContent = this.value;
+        ctx.lineWidth = this.value;
+    });
+
+    const lineBtn = document.getElementById("line");
+    const rectBtn = document.getElementById("rect");
+    const triBtn = document.getElementById("tri");
+    const circleBtn = document.getElementById("circle");
+
+    lineBtn.addEventListener('click', () => {
+        currentTool = 'line';
+        canvas.style.cursor = "crosshair";
+    });
+    rectBtn.addEventListener('click', () => {
+        currentTool = 'rectangle';
+        canvas.style.cursor = "crosshair";
+    });
+    triBtn.addEventListener('click', () => {
+        currentTool = 'triangle';
+        canvas.style.cursor = "crosshair";
+    });
+    circleBtn.addEventListener('click', () => {
+        currentTool = 'circle';
+        canvas.style.cursor = "crosshair";
+    });
+
+    let startX = 0;
+    let startY = 0;
+    let tempImage = null;
+
+    const selectBtn = document.getElementById("select");
+    selectBtn.addEventListener('click', () => {
+        canvas.style.cursor = "crosshair";
+        currentTool = "select";
+    });
+</script>
+{% endblock %}

@@ -91,8 +91,11 @@ def wave(board_id):
         verified = session.get(f"verified_board_{board_id}", False)
         if not verified:
             return redirect(url_for("board.verify_wave", board_id=board_id))
-    
-    return f"Editing board {board_id}"
+
+    cursor.execute("SELECT * FROM tasks WHERE id = %s",(board['task_id'],))
+    task = cursor.fetchone()
+
+    return render_template("wave.html",task=task,board=board)
 
 @bp.route('/verify_wave/<int:board_id>',methods=['GET','POST'])
 @login_required

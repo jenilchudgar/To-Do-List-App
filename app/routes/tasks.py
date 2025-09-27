@@ -209,7 +209,7 @@ def get_tasks(tasks,title):
             for task,assigned in zip(tasks,assigned_by_list):
                 task_start = task['start_date']
 
-                if task['status'] == "Pending" and task_start <= now:
+                if task_start <= now:
                     l.append((f"{user['first_name']} {user['last_name']}", task, assigned))
 
         status_code = 200
