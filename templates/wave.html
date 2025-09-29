@@ -153,10 +153,49 @@
     let strokes = [];
     let currentStroke = null;
 
+    let endX = 0;
+    let endY = 0;
+
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 2;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
+
+    let history = [];
+    let historyStep = -1;
+
+    function saveState() {
+        historyStep++;
+        // Remove redo states if any
+        history = history.slice(0, historyStep);
+        history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    }
+
+    canvas.addEventListener('keydown', function(event) {
+    if (event.ctrlKey && event.key === 'z') {
+        undo();
+        event.preventDefault();
+    }
+    if (event.ctrlKey && event.key === 'y') {
+        redo();
+        event.preventDefault();
+    }
+});
+
+    function undo() {
+        if (historyStep > 0) {
+            historyStep--;
+            ctx.putImageData(history[historyStep], 0, 0);
+        }
+    }
+
+    function redo() {
+        if (historyStep < history.length - 1) {
+            historyStep++;
+            ctx.putImageData(history[historyStep], 0, 0);
+        }
+    }
+
 
     function draw(e) {
         if (!isDrawing) return;
@@ -168,6 +207,8 @@
     }
 
     canvas.addEventListener('mousedown', (e) => {
+        canvas.focus();
+
         isDrawing = true;
         startX = e.offsetX;
         startY = e.offsetY;
@@ -182,7 +223,8 @@
             endX: startX,
             endY: startY
         };
-        if (currentTool === "select") {
+        // Save canvas snapshot for shapes
+        if (['line', 'rectangle', 'triangle', 'circle', 'select'].includes(currentTool)) {
             tempImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
         }
     });
@@ -200,10 +242,11 @@
             }
         } else if (['line', 'rectangle', 'triangle', 'circle'].includes(currentTool)) {
             ctx.putImageData(tempImage, 0, 0);
-            const endX = e.offsetX;
-            const endY = e.offsetY;
+            endX = e.offsetX;
+            endY = e.offsetY;
             ctx.strokeStyle = penColor.value;
             ctx.lineWidth = rangeInput.value;
+            ctx.globalCompositeOperation = "source-over";
 
             switch (currentTool) {
                 case 'line':
@@ -231,8 +274,8 @@
                     break;
             }
         } else if (currentTool === "select") {
-            const endX = e.offsetX;
-            const endY = e.offsetY;
+            endX = e.offsetX;
+            endY = e.offsetY;
             ctx.putImageData(tempImage, 0, 0);
             ctx.setLineDash([6]);
             ctx.strokeStyle = "black";
@@ -266,10 +309,11 @@
 
     canvas.addEventListener('mouseup', (e) => {
         if (currentStroke) strokes.push(currentStroke);
+        saveState();
 
         if (currentTool === "select") {
-            const endX = e.offsetX;
-            const endY = e.offsetY;
+            endX = e.offsetX;
+            endY = e.offsetY;
             drawSmallHolder(startX, startY, endX, endY);
         }
 
@@ -304,7 +348,7 @@
         currentTool = 'eraser';
         ctx.lineWidth = 15;
         ctx.globalCompositeOperation = "destination-out";
-        canvas.style.cursor = "url('static/images/eraser_cursor.png') 12 12, default";
+        canvas.style.cursor = "url('/static/images/eraser_cursor.png') 12 12, default";
     });
 
     penBtn.addEventListener('click', () => {
@@ -431,6 +475,27 @@
     selectBtn.addEventListener('click', () => {
         canvas.style.cursor = "crosshair";
         currentTool = "select";
+        canvas.focus(); 
     });
+
+    canvas.tabIndex = 1000; // any positive number
+
+    canvas.addEventListener('keydown', function (event) {
+        const key = event.key;
+        if (key === "Backspace" || key === "Delete") {
+            if (currentTool == "select") {
+                // Compute top-left corner and positive width/height
+                const x = Math.min(startX, endX);
+                const y = Math.min(startY, endY);
+                const width = Math.abs(endX - startX);
+                const height = Math.abs(endY - startY);
+
+                ctx.clearRect(x-5, y-5, width+10, height+10);
+
+                
+            }
+        }
+    });
+
 </script>
 {% endblock %}
